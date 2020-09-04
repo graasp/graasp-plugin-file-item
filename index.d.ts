@@ -3,9 +3,9 @@ import fastify, { FastifyPlugin } from 'fastify';
 declare namespace graasp3FileItem {
   interface Graasp3FileItemOptions {
     /**
-     * Filesystem path to where the uploaded files will be saved
+     * Filesystem root path where the uploaded files will be saved
      */
-    storagePath: string;
+    storageRootPath: string;
   }
 }
 

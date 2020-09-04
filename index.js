@@ -1,108 +1,111 @@
 /**
  * TODOs:
- * - generate the destination paths for the files
- * - generate the file names for the files: don't use original file names (just keep in db)
- * - improve logging
- * - ?parentId=<id> query param so that uploaded files/items are created below given parent item
- * - give item some meaningful name - maybe a "simplified" version of the file name
- * - 
+ * - define schemas for fastify.multipart (?)
+ * - improve/add some logging
+ * - tests
  */
 
-const pump = require('pump');
+const util = require('util');
+
 const fs = require('fs');
+const mkdir = util.promisify(fs.mkdir);
+const stat = util.promisify(fs.stat);
+const unlink = util.promisify(fs.unlink);
+
+const { pipeline } = require('stream');
+const pump = util.promisify(pipeline);
+
 const fastifyMultipart = require('fastify-multipart');
 
-async function pumpFileToDestination(file, path) {
-  return new Promise((resolve, reject) => {
-    pump(file, fs.createWriteStream(path), (err) => {
-      if (err) return reject(new Error(err));
-      resolve();
-    });
-  }).catch(err => err);
-}
+// const createError = require('fastify-error');
+// const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
+
+const { common, download, upload } = require('./schemas/shared');
+
+const ITEM_TYPE = 'file';
+const ORIGINAL_FILENAME_TRUNCATE_LIMIT = 100;
+const DEFAULT_MAX_FILE_SIZE = 10424 * 1024 * 250; // 250MB
+
+const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
 
 module.exports = async (fastify, options) => {
-  const { storagePath } = options;
-  const { taskManager, log } = fastify;
+  const { storageRootPath } = options;
+  const { taskManager } = fastify;
 
-  /**
-   * Create tasks for files that were properly saved ('pumped') in the file system,
-   * otherwise log a warning.
-   */
-  const createTasks = async (member, savedFiles) => {
-    const tasks = [];
+  fastify.addSchema(common);
 
-    for (let i = 0; i < savedFiles.length; i++) {
-      const { filename, encoding, mimetype, fileSavePromise } = savedFiles[i];
+  // taskManager.setPostDeleteHandler((item) => {
+  //   if (item.type !== ITEM_TYPE) return;
+  //   console.log('PostDeleteHandler');
+  // });
+
+  fastify.register(fastifyMultipart, {
+    limits: {
+      // fieldNameSize: 0,             // Max field name size in bytes (Default: 100 bytes).
+      // fieldSize: 1000000,           // Max field value size in bytes (Default: 1MB).
+      fields: 0,                       // Max number of non-file fields (Default: Infinity).
+      fileSize: DEFAULT_MAX_FILE_SIZE, // For multipart forms, the max file size (Default: Infinity).
+      files: 5,                        // Max number of file fields (Default: Infinity).
+      // headerPairs: 2000             // Max number of header key=>value pairs (Default: 2000 - same as node's http).
+    }
+  });
+
+  // receive uploaded file(s) and create item(s)
+  fastify.post('/upload', { schema: upload }, async (request, reply) => {
+    const { query: { parentId }, member, log } = request;
+    const parts = await request.files();
+
+    for await (const { file, filename, mimetype, encoding } of parts) {
+      const path = `${randomHexOf4()}/${randomHexOf4()}`;
+
+      // create directories path
+      await mkdir(`${storageRootPath}/${path}`, { recursive: true });
+
+      // 'pump' file to directory
+      const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
+      const storageFilepath = `${storageRootPath}/${filepath}`;
+      await pump(file, fs.createWriteStream(storageFilepath))
+
+      // get file size 
+      const { size } = await stat(storageFilepath);
+
       try {
-        const result = await fileSavePromise;
-        if (result instanceof Error) throw result;
-
-        const item = { name: 'new file', extra: { filename, encoding, mimetype } };
-        const task = taskManager.createCreateTask(member, item);
-        tasks.push(task);
+        // create 'file' item
+        const name = filename.substring(0, ORIGINAL_FILENAME_TRUNCATE_LIMIT);
+        const item = {
+          name,
+          type: ITEM_TYPE,
+          extra: { name: filename, path: filepath, size, mimetype, encoding }
+        };
+        const task = taskManager.createCreateTask(member, item, parentId);
+        await taskManager.run([task]);
       } catch (error) {
-        log.warn(error, `File ${filename} from member ${member.id} not saved`);
+        await unlink(storageFilepath); // delete file if item is not created
+        throw error;
       }
     }
-
-    await taskManager.run(tasks);
-  };
-
-  fastify.register(fastifyMultipart, {});
-
-  // upload file and create item with it
-  fastify.post('/upload', async (request, reply) => {
-    if (!request.isMultipart()) {
-      reply.code(400);
-      throw new Error('request is not multipart');
-    }
-
-    const { member } = request;
-    const savedFiles = [];
-
-    await new Promise((resolve, reject) => {
-      request.multipart(
-        (field, file, filename, encoding, mimetype) => {
-          savedFiles.push({
-            filename,
-            encoding,
-            mimetype,
-            // start the 'pumping' while other files are being uploaded
-            // (pumpFileToDestination() never 'rejects' otherwise it could not be called here like this)
-            fileSavePromise: pumpFileToDestination(file, `${storagePath}/${filename}`)
-          });
-        },
-        (err) => {
-          if (err) return reject(err);
-
-          createTasks(member, savedFiles);
-          resolve();
-        }
-      );
-    });
 
     reply.status(204);
   });
 
   // download item's file
-  fastify.get('/download/:id', async (request, reply) => {
+  fastify.get('/download/:id', { schema: download }, async (request, reply) => {
     const { member, params: { id } } = request;
 
     const task = taskManager.createGetTask(member, id);
-    const { extra: { filename, mimetype } } = await taskManager.run([task]);
+    const { type, extra: { name, path, mimetype } } = await taskManager.run([task]);
 
-    if (!filename) {
+    if (type !== ITEM_TYPE || !path || !name) {
       reply.status(400);
-      throw new Error('Item with no file');
+      throw new Error(`Not a \'${ITEM_TYPE}\' item`);
     }
 
     reply.type(mimetype);
-    // this header will make the browser download the file with `filename` instead of
+    // this header will make the browser download the file with `name` instead of
     // simply opening it and showing it
-    reply.header('Content-Disposition', `attachment; filename="${filename}"`);
+    reply.header('Content-Disposition', `attachment; filename="${name}"`);
 
     // TODO: can/should this be done in a worker (fastify piscina)?
-    return fs.createReadStream(`${storagePath}/${filename}`);
+    return fs.createReadStream(`${storageRootPath}/${path}`);
   });
 };
