@@ -20,7 +20,7 @@ const fastifyMultipart = require('fastify-multipart');
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
 
-const { common, download, upload } = require('./schemas/shared');
+const { download: downloadSchema, upload: uploadSchema } = require('./schemas/shared');
 
 const ITEM_TYPE = 'file';
 const ORIGINAL_FILENAME_TRUNCATE_LIMIT = 100;
@@ -29,15 +29,19 @@ const DEFAULT_MAX_FILE_SIZE = 10424 * 1024 * 250; // 250MB
 const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
 
 module.exports = async (fastify, options) => {
+  // TODO: throw error if 'storageRootPath' is not supplied???
   const { storageRootPath } = options;
-  const { taskManager } = fastify;
+  const { taskManager, log } = fastify;
 
-  fastify.addSchema(common);
+  // register post delete handler to erase the file of a 'file item'
+  taskManager.setPostDeleteHandler((item) => {
+    const { type: itemType, extra: { path: filepath } } = item;
+    if (itemType !== ITEM_TYPE) return;
 
-  // taskManager.setPostDeleteHandler((item) => {
-  //   if (item.type !== ITEM_TYPE) return;
-  //   console.log('PostDeleteHandler');
-  // });
+    const storageFilepath = `${storageRootPath}/${filepath}`;
+    unlink(storageFilepath) // delete file if item is not created
+      .catch(log.error); // TODO: use the request's logger instance?
+  });
 
   fastify.register(fastifyMultipart, {
     limits: {
@@ -51,8 +55,8 @@ module.exports = async (fastify, options) => {
   });
 
   // receive uploaded file(s) and create item(s)
-  fastify.post('/upload', { schema: upload }, async (request, reply) => {
-    const { query: { parentId }, member, log } = request;
+  fastify.post('/upload', { schema: uploadSchema }, async (request, reply) => {
+    const { query: { parentId }, member } = request;
     const parts = await request.files();
 
     for await (const { file, filename, mimetype, encoding } of parts) {
@@ -64,7 +68,7 @@ module.exports = async (fastify, options) => {
       // 'pump' file to directory
       const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
       const storageFilepath = `${storageRootPath}/${filepath}`;
-      await pump(file, fs.createWriteStream(storageFilepath))
+      await pump(file, fs.createWriteStream(storageFilepath));
 
       // get file size 
       const { size } = await stat(storageFilepath);
@@ -80,7 +84,7 @@ module.exports = async (fastify, options) => {
         const task = taskManager.createCreateTask(member, item, parentId);
         await taskManager.run([task]);
       } catch (error) {
-        await unlink(storageFilepath); // delete file if item is not created
+        await unlink(storageFilepath); // delete file if creation fails
         throw error;
       }
     }
@@ -89,7 +93,7 @@ module.exports = async (fastify, options) => {
   });
 
   // download item's file
-  fastify.get('/download/:id', { schema: download }, async (request, reply) => {
+  fastify.get('/download/:id', { schema: downloadSchema }, async (request, reply) => {
     const { member, params: { id } } = request;
 
     const task = taskManager.createGetTask(member, id);
@@ -97,7 +101,7 @@ module.exports = async (fastify, options) => {
 
     if (type !== ITEM_TYPE || !path || !name) {
       reply.status(400);
-      throw new Error(`Not a \'${ITEM_TYPE}\' item`);
+      throw new Error(`Invalid '${ITEM_TYPE}' item`);
     }
 
     reply.type(mimetype);
