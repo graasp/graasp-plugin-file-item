@@ -11,6 +11,7 @@ const fs = require('fs');
 const mkdir = util.promisify(fs.mkdir);
 const stat = util.promisify(fs.stat);
 const unlink = util.promisify(fs.unlink);
+const copyFile = util.promisify(fs.copyFile);
 
 const { pipeline } = require('stream');
 const pump = util.promisify(pipeline);
@@ -39,9 +40,31 @@ module.exports = async (fastify, options) => {
     if (itemType !== ITEM_TYPE) return;
 
     const storageFilepath = `${storageRootPath}/${filepath}`;
-    unlink(storageFilepath) // delete file if item is not created
+    unlink(storageFilepath)
       .catch(log.error); // TODO: use the request's logger instance?
   });
+
+  // register pre copy handler to make a copy of the 'file item's file
+  taskManager.setPreCopyHandler(async (item) => {
+    const { type: itemType, extra: { path: originalFilepath } } = item;
+    if (itemType !== ITEM_TYPE) return;
+    
+    const path = `${randomHexOf4()}/${randomHexOf4()}`;
+    
+    // create directories path
+    await mkdir(`${storageRootPath}/${path}`, { recursive: true });
+    
+    // copy file
+    const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
+    const storageFilepath = `${storageRootPath}/${filepath}`;
+    
+    const storageOriginalFilepath = `${storageRootPath}/${originalFilepath}`;
+    await copyFile(storageOriginalFilepath, storageFilepath);
+
+    // update item copy's 'extra' 
+    item.extra.path = filepath;
+  });
+
 
   fastify.register(fastifyMultipart, {
     limits: {
@@ -56,7 +79,7 @@ module.exports = async (fastify, options) => {
 
   // receive uploaded file(s) and create item(s)
   fastify.post('/upload', { schema: uploadSchema }, async (request, reply) => {
-    const { query: { parentId }, member } = request;
+    const { query: { parentId }, member, log } = request;
     const parts = await request.files();
 
     for await (const { file, filename, mimetype, encoding } of parts) {
@@ -82,7 +105,7 @@ module.exports = async (fastify, options) => {
           extra: { name: filename, path: filepath, size, mimetype, encoding }
         };
         const task = taskManager.createCreateTask(member, item, parentId);
-        await taskManager.run([task]);
+        await taskManager.run([task], log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -94,10 +117,10 @@ module.exports = async (fastify, options) => {
 
   // download item's file
   fastify.get('/download/:id', { schema: downloadSchema }, async (request, reply) => {
-    const { member, params: { id } } = request;
+    const { member, params: { id }, log } = request;
 
     const task = taskManager.createGetTask(member, id);
-    const { type, extra: { name, path, mimetype } } = await taskManager.run([task]);
+    const { type, extra: { name, path, mimetype } } = await taskManager.run([task], log);
 
     if (type !== ITEM_TYPE || !path || !name) {
       reply.status(400);
@@ -105,7 +128,7 @@ module.exports = async (fastify, options) => {
     }
 
     reply.type(mimetype);
-    // this header will make the browser download the file with `name` instead of
+    // this header will make the browser download the file with 'name' instead of
     // simply opening it and showing it
     reply.header('Content-Disposition', `attachment; filename="${name}"`);
 

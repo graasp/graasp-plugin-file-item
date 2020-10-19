@@ -13,9 +13,9 @@
     "fastify-error: ~0.2.0"
   ],
   "devDependencies": {
-    "fastify": "~3.2.0"
+    "fastify": "^3.6.0"
   },
   "dependencies": {
-    "fastify-multipart": "~3.1.0"
+    "fastify-multipart": "^3.2.0"
   }
 }
