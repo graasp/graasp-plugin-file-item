@@ -32,32 +32,33 @@ const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart
 module.exports = async (fastify, options) => {
   // TODO: throw error if 'storageRootPath' is not supplied???
   const { storageRootPath } = options;
-  const { taskManager, log } = fastify;
+  const { taskManager } = fastify;
 
   // register post delete handler to erase the file of a 'file item'
-  taskManager.setPostDeleteHandler((item) => {
+  taskManager.setPostDeleteHandler((item, log) => {
     const { type: itemType, extra: { path: filepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
     const storageFilepath = `${storageRootPath}/${filepath}`;
     unlink(storageFilepath)
-      .catch(log.error); // TODO: use the request's logger instance?
+      // using request's logger instance. can't use arrow fn because 'log.error' uses 'this'.
+      .catch(function (error) { log.error(error) });
   });
 
   // register pre copy handler to make a copy of the 'file item's file
-  taskManager.setPreCopyHandler(async (item) => {
+  taskManager.setPreCopyHandler(async function (item) {
     const { type: itemType, extra: { path: originalFilepath } } = item;
     if (itemType !== ITEM_TYPE) return;
-    
+
     const path = `${randomHexOf4()}/${randomHexOf4()}`;
-    
+
     // create directories path
     await mkdir(`${storageRootPath}/${path}`, { recursive: true });
-    
+
     // copy file
     const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
     const storageFilepath = `${storageRootPath}/${filepath}`;
-    
+
     const storageOriginalFilepath = `${storageRootPath}/${originalFilepath}`;
     await copyFile(storageOriginalFilepath, storageFilepath);
 
