@@ -32,10 +32,13 @@ const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart
 module.exports = async (fastify, options) => {
   // TODO: throw error if 'storageRootPath' is not supplied???
   const { storageRootPath } = options;
+
+  if (!storageRootPath) throw new Error('graasp-file-item: missing plugin option `storageRootPath`');
+
   const { taskManager } = fastify;
 
   // register post delete handler to erase the file of a 'file item'
-  taskManager.setPostDeleteHandler((item, log) => {
+  taskManager.setPostDeleteHandler((item, actor, log) => {
     const { type: itemType, extra: { path: filepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
