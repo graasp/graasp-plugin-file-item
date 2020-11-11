@@ -120,7 +120,7 @@ module.exports = async (fastify, options) => {
   });
 
   // download item's file
-  fastify.get('/download/:id', { schema: downloadSchema }, async (request, reply) => {
+  fastify.get('/:id/download', { schema: downloadSchema }, async (request, reply) => {
     const { member, params: { id }, log } = request;
 
     const task = taskManager.createGetTask(member, id);
