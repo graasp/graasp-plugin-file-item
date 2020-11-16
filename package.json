@@ -1,6 +1,6 @@
 {
   "name": "graasp-file-item",
-  "version": "0.1.0",
+  "version": "0.1.1-beta",
   "engines": {
     "node": ">=12.0.0"
   },
@@ -13,9 +13,9 @@
     "fastify-error: ~0.2.0"
   ],
   "devDependencies": {
-    "fastify": "^3.6.0"
+    "fastify": "^3.8.0"
   },
   "dependencies": {
-    "fastify-multipart": "^3.2.0"
+    "fastify-multipart": "^3.3.0"
   }
 }
