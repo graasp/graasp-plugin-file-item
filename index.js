@@ -25,17 +25,15 @@ const { download: downloadSchema, upload: uploadSchema } = require('./schemas/sh
 
 const ITEM_TYPE = 'file';
 const ORIGINAL_FILENAME_TRUNCATE_LIMIT = 100;
-const DEFAULT_MAX_FILE_SIZE = 10424 * 1024 * 250; // 250MB
+const DEFAULT_MAX_FILE_SIZE = 1024 * 1024 * 250; // 250MB
 
 const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
 
 module.exports = async (fastify, options) => {
   // TODO: throw error if 'storageRootPath' is not supplied???
-  const { storageRootPath } = options;
+  const { storageRootPath, taskManager } = options;
 
-  if (!storageRootPath) throw new Error('graasp-file-item: missing plugin option `storageRootPath`');
-
-  const { taskManager } = fastify;
+  if (!storageRootPath || !taskManager) throw new Error('graasp-file-item: missing plugin options');
 
   // register post delete handler to erase the file of a 'file item'
   taskManager.setPostDeleteHandler((item, actor, log) => {
