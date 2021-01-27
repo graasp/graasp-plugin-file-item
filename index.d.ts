@@ -1,12 +1,12 @@
 import { FastifyPluginAsync } from 'fastify';
-import { ItemTaskManager } from 'graasp';
+import { TaskManager, Member, Item } from 'graasp';
 
 interface GraaspFileItemOptions {
   /**
    * Filesystem root path where the uploaded files will be saved
    */
   storageRootPath: string;
-  itemTaskManager: ItemTaskManager;
+  itemTaskManager: TaskManager<Member, Item>;
   deleteItemTaskName: string;
   copyItemTaskName: string;
 }
