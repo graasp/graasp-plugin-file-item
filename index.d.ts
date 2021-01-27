@@ -6,7 +6,7 @@ interface GraaspFileItemOptions {
    * Filesystem root path where the uploaded files will be saved
    */
   storageRootPath: string;
-  taskManager: ItemTaskManager;
+  itemTaskManager: ItemTaskManager;
 }
 
 declare const plugin: FastifyPluginAsync<GraaspFileItemOptions>;

@@ -18,6 +18,8 @@ const pump = util.promisify(pipeline);
 
 const fastifyMultipart = require('fastify-multipart');
 
+const { ItemtaskManager } = require('graasp');
+
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
 
@@ -30,13 +32,13 @@ const DEFAULT_MAX_FILE_SIZE = 1024 * 1024 * 250; // 250MB
 const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
 
 module.exports = async (fastify, options) => {
-  // TODO: throw error if 'storageRootPath' is not supplied???
-  const { storageRootPath, taskManager } = options;
+  const { taskRunner: runner } = fastify;
+  const { storageRootPath, itemtaskManager: taskManager } = options;
 
   if (!storageRootPath || !taskManager) throw new Error('graasp-file-item: missing plugin options');
 
   // register post delete handler to erase the file of a 'file item'
-  taskManager.setPostDeleteHandler((item, actor, log) => {
+  runner.setTaskPostHookHandler(ItemtaskManager.DeleteItemTaskName, (item, actor, log) => {
     const { type: itemType, extra: { path: filepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
@@ -47,7 +49,7 @@ module.exports = async (fastify, options) => {
   });
 
   // register pre copy handler to make a copy of the 'file item's file
-  taskManager.setPreCopyHandler(async function (item) {
+  runner.setTaskPreHookHandler(ItemtaskManager.CopyItemTaskName, async function (item) {
     const { type: itemType, extra: { path: originalFilepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
@@ -107,7 +109,7 @@ module.exports = async (fastify, options) => {
           extra: { name: filename, path: filepath, size, mimetype, encoding }
         };
         const task = taskManager.createCreateTask(member, item, parentId);
-        await taskManager.run([task], log);
+        await runner.run([task], log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -122,7 +124,7 @@ module.exports = async (fastify, options) => {
     const { member, params: { id }, log } = request;
 
     const task = taskManager.createGetTask(member, id);
-    const { type, extra: { name, path, mimetype } } = await taskManager.run([task], log);
+    const { type, extra: { name, path, mimetype } } = await runner.run([task], log);
 
     if (type !== ITEM_TYPE || !path || !name) {
       reply.status(400);
