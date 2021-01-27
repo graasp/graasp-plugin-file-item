@@ -7,6 +7,8 @@ interface GraaspFileItemOptions {
    */
   storageRootPath: string;
   itemTaskManager: ItemTaskManager;
+  deleteItemTaskName: string;
+  copyItemTaskName: string;
 }
 
 declare const plugin: FastifyPluginAsync<GraaspFileItemOptions>;

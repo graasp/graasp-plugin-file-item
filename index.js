@@ -18,8 +18,6 @@ const pump = util.promisify(pipeline);
 
 const fastifyMultipart = require('fastify-multipart');
 
-const { ItemtaskManager } = require('graasp');
-
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
 
@@ -33,12 +31,17 @@ const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart
 
 module.exports = async (fastify, options) => {
   const { taskRunner: runner } = fastify;
-  const { storageRootPath, itemtaskManager: taskManager } = options;
+  const {
+    storageRootPath, itemtaskManager: taskManager,
+    deleteItemTaskName, copyItemTaskName
+  } = options;
 
-  if (!storageRootPath || !taskManager) throw new Error('graasp-file-item: missing plugin options');
+  if (!storageRootPath || !taskManager || !deleteItemTaskName || !copyItemTaskName) {
+    throw new Error('graasp-file-item: missing plugin options');
+  }
 
   // register post delete handler to erase the file of a 'file item'
-  runner.setTaskPostHookHandler(ItemtaskManager.DeleteItemTaskName, (item, actor, log) => {
+  runner.setTaskPostHookHandler(deleteItemTaskName, (item, actor, log) => {
     const { type: itemType, extra: { path: filepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
@@ -49,7 +52,7 @@ module.exports = async (fastify, options) => {
   });
 
   // register pre copy handler to make a copy of the 'file item's file
-  runner.setTaskPreHookHandler(ItemtaskManager.CopyItemTaskName, async function (item) {
+  runner.setTaskPreHookHandler(copyItemTaskName, async function (item) {
     const { type: itemType, extra: { path: originalFilepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
