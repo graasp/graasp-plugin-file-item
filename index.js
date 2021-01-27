@@ -32,7 +32,7 @@ const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart
 module.exports = async (fastify, options) => {
   const { taskRunner: runner } = fastify;
   const {
-    storageRootPath, itemtaskManager: taskManager,
+    storageRootPath, itemTaskManager: taskManager,
     deleteItemTaskName, copyItemTaskName
   } = options;
 
