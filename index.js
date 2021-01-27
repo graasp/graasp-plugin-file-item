@@ -31,16 +31,14 @@ const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart
 
 module.exports = async (fastify, options) => {
   const { taskRunner: runner } = fastify;
-  const {
-    storageRootPath, itemTaskManager: taskManager,
-    deleteItemTaskName, copyItemTaskName
-  } = options;
+  const { storageRootPath, itemTaskManager: taskManager } = options;
 
-  if (!storageRootPath || !taskManager || !deleteItemTaskName || !copyItemTaskName) {
+  if (!storageRootPath || !taskManager) {
     throw new Error('graasp-file-item: missing plugin options');
   }
 
   // register post delete handler to erase the file of a 'file item'
+  const deleteItemTaskName = taskManager.getDeleteTaskName();
   runner.setTaskPostHookHandler(deleteItemTaskName, (item, actor, log) => {
     const { type: itemType, extra: { path: filepath } } = item;
     if (itemType !== ITEM_TYPE) return;
@@ -52,6 +50,7 @@ module.exports = async (fastify, options) => {
   });
 
   // register pre copy handler to make a copy of the 'file item's file
+  const copyItemTaskName = taskManager.getCopyItemTaskName();
   runner.setTaskPreHookHandler(copyItemTaskName, async function (item) {
     const { type: itemType, extra: { path: originalFilepath } } = item;
     if (itemType !== ITEM_TYPE) return;
