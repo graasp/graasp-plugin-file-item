@@ -39,7 +39,7 @@ module.exports = async (fastify, options) => {
 
   // register post delete handler to erase the file of a 'file item'
   const deleteItemTaskName = taskManager.getDeleteTaskName();
-  runner.setTaskPostHookHandler(deleteItemTaskName, (item, actor, log) => {
+  runner.setTaskPostHookHandler(deleteItemTaskName, (item, actor, { log }) => {
     const { type: itemType, extra: { path: filepath } } = item;
     if (itemType !== ITEM_TYPE) return;
 
