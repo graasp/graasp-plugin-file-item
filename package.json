@@ -13,10 +13,10 @@
     "fastify-error: ~0.2.0"
   ],
   "dependencies": {
-    "fastify-multipart": "^3.3.0"
+    "fastify-multipart": "^4.0.0"
   },
   "devDependencies": {
     "@types/graasp": "github:graasp/graasp-types.git#master",
-    "fastify": "^3.8.0"
+    "fastify": "^3.0.0"
   }
 }
