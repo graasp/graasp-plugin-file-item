@@ -16,7 +16,7 @@
     "fastify-multipart": "^4.0.0"
   },
   "devDependencies": {
-    "@types/graasp": "github:graasp/graasp-types.git#master",
+    "@types/graasp": "git://github.com/graasp/graasp-types.git#master",
     "fastify": "^3.0.0"
   }
 }
