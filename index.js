@@ -30,10 +30,10 @@ const DEFAULT_MAX_FILE_SIZE = 1024 * 1024 * 250; // 250MB
 const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
 
 module.exports = async (fastify, options) => {
-  const { taskRunner: runner } = fastify;
-  const { storageRootPath, itemTaskManager: taskManager } = options;
+  const { items: { taskManager }, taskRunner: runner } = fastify;
+  const { storageRootPath } = options;
 
-  if (!storageRootPath || !taskManager) {
+  if (!storageRootPath) {
     throw new Error('graasp-file-item: missing plugin options');
   }
 
@@ -50,7 +50,7 @@ module.exports = async (fastify, options) => {
   });
 
   // register pre copy handler to make a copy of the 'file item's file
-  const copyItemTaskName = taskManager.getCopyItemTaskName();
+  const copyItemTaskName = taskManager.getCopyTaskName();
   runner.setTaskPreHookHandler(copyItemTaskName, async function (item) {
     const { type: itemType, extra: { path: originalFilepath } } = item;
     if (itemType !== ITEM_TYPE) return;
@@ -111,7 +111,7 @@ module.exports = async (fastify, options) => {
           extra: { name: filename, path: filepath, size, mimetype, encoding }
         };
         const task = taskManager.createCreateTask(member, item, parentId);
-        await runner.run([task], log);
+        await runner.runSingle(task, log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -126,7 +126,7 @@ module.exports = async (fastify, options) => {
     const { member, params: { id }, log } = request;
 
     const task = taskManager.createGetTask(member, id);
-    const { type, extra: { name, path, mimetype } } = await runner.run([task], log);
+    const { type, extra: { name, path, mimetype } } = await runner.runSingle(task, log);
 
     if (type !== ITEM_TYPE || !path || !name) {
       reply.status(400);
