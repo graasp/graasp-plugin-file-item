@@ -40,9 +40,10 @@ module.exports = async (fastify, options) => {
   // register post delete handler to erase the file of a 'file item'
   const deleteItemTaskName = taskManager.getDeleteTaskName();
   runner.setTaskPostHookHandler(deleteItemTaskName, (item, actor, { log }) => {
-    const { type: itemType, extra: { path: filepath } } = item;
-    if (itemType !== ITEM_TYPE) return;
+    const { type: itemType, extra: { fileItem } } = item;
+    if (itemType !== ITEM_TYPE || !fileItem) return;
 
+    const { path: filepath } = fileItem;
     const storageFilepath = `${storageRootPath}/${filepath}`;
     unlink(storageFilepath)
       // using request's logger instance. can't use arrow fn because 'log.error' uses 'this'.
@@ -52,9 +53,10 @@ module.exports = async (fastify, options) => {
   // register pre copy handler to make a copy of the 'file item's file
   const copyItemTaskName = taskManager.getCopyTaskName();
   runner.setTaskPreHookHandler(copyItemTaskName, async function (item) {
-    const { type: itemType, extra: { path: originalFilepath } } = item;
-    if (itemType !== ITEM_TYPE) return;
+    const { type: itemType, extra: { fileItem } } = item;
+    if (itemType !== ITEM_TYPE || !fileItem) return;
 
+    const { path: originalFilepath } = fileItem;
     const path = `${randomHexOf4()}/${randomHexOf4()}`;
 
     // create directories path
@@ -68,7 +70,7 @@ module.exports = async (fastify, options) => {
     await copyFile(storageOriginalFilepath, storageFilepath);
 
     // update item copy's 'extra' 
-    item.extra.path = filepath;
+    item.extra.fileItem.path = filepath;
   });
 
 
@@ -108,7 +110,7 @@ module.exports = async (fastify, options) => {
         const item = {
           name,
           type: ITEM_TYPE,
-          extra: { name: filename, path: filepath, size, mimetype, encoding }
+          extra: { fileItem: { name: filename, path: filepath, size, mimetype, encoding } }
         };
         const task = taskManager.createCreateTask(member, item, parentId);
         await runner.runSingle(task, log);
@@ -126,12 +128,14 @@ module.exports = async (fastify, options) => {
     const { member, params: { id }, log } = request;
 
     const task = taskManager.createGetTask(member, id);
-    const { type, extra: { name, path, mimetype } } = await runner.runSingle(task, log);
+    const { type, extra: { fileItem } } = await runner.runSingle(task, log);
 
-    if (type !== ITEM_TYPE || !path || !name) {
+    if (type !== ITEM_TYPE || !fileItem) {
       reply.status(400);
       throw new Error(`Invalid '${ITEM_TYPE}' item`);
     }
+
+    const { name, path, mimetype } = fileItem;
 
     reply.type(mimetype);
     // this header will make the browser download the file with 'name' instead of
