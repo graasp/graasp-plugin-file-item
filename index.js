@@ -89,8 +89,11 @@ module.exports = async (fastify, options) => {
   fastify.post('/upload', { schema: uploadSchema }, async (request, reply) => {
     const { query: { parentId }, member, log } = request;
     const parts = await request.files();
+    const count = 0;
+    let item;
 
     for await (const { file, filename, mimetype, encoding } of parts) {
+      count++;
       const path = `${randomHexOf4()}/${randomHexOf4()}`;
 
       // create directories path
@@ -101,7 +104,7 @@ module.exports = async (fastify, options) => {
       const storageFilepath = `${storageRootPath}/${filepath}`;
       await pump(file, fs.createWriteStream(storageFilepath));
 
-      // get file size 
+      // get file size
       const { size } = await stat(storageFilepath);
 
       try {
@@ -113,14 +116,18 @@ module.exports = async (fastify, options) => {
           extra: { fileItem: { name: filename, path: filepath, size, mimetype, encoding } }
         };
         const task = taskManager.createCreateTask(member, item, parentId);
-        await runner.runSingle(task, log);
+        item = await runner.runSingle(task, log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
       }
     }
 
-    reply.status(204);
+    if (count === 1) {
+      return item;
+    } else {
+      reply.status(204);
+    }
   });
 
   // download item's file
