@@ -124,6 +124,7 @@ module.exports = async (fastify, options) => {
     }
 
     if (count === 1) {
+      reply.status(201);
       return item;
     } else {
       reply.status(204);
