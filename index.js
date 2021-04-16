@@ -89,7 +89,7 @@ module.exports = async (fastify, options) => {
   fastify.post('/upload', { schema: uploadSchema }, async (request, reply) => {
     const { query: { parentId }, member, log } = request;
     const parts = await request.files();
-    const count = 0;
+    let count = 0;
     let item;
 
     for await (const { file, filename, mimetype, encoding } of parts) {
