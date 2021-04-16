@@ -110,12 +110,12 @@ module.exports = async (fastify, options) => {
       try {
         // create 'file' item
         const name = filename.substring(0, ORIGINAL_FILENAME_TRUNCATE_LIMIT);
-        const item = {
+        const data = {
           name,
           type: ITEM_TYPE,
           extra: { file: { name: filename, path: filepath, size, mimetype, encoding } }
         };
-        const task = taskManager.createCreateTask(member, item, parentId);
+        const task = taskManager.createCreateTask(member, data, parentId);
         item = await runner.runSingle(task, log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
