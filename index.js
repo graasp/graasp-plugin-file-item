@@ -17,7 +17,7 @@ const { pipeline } = require('stream');
 const pump = util.promisify(pipeline);
 
 const fastifyMultipart = require('fastify-multipart');
-const graaspFileUploadLimiter = require('graasp-file-upload-limiter')
+const graaspFileUploadLimiter = require('graasp-file-upload-limiter');
 
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
@@ -89,7 +89,7 @@ module.exports = async (fastify, options) => {
   fastify.register(graaspFileUploadLimiter, {
     sizePath: 'file.size',
     type: ITEM_TYPE
-  })
+  });
 
   // receive uploaded file(s) and create item(s)
   fastify.post('/upload', { schema: uploadSchema }, async (request, reply) => {
