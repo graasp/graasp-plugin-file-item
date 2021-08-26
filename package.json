@@ -13,11 +13,12 @@
     "fastify-error: ~0.2.0"
   ],
   "dependencies": {
-    "fastify-multipart": "^4.0.0",
+    "content-disposition": "0.5.3",
+    "fastify-multipart": "4.0.0",
     "graasp-file-upload-limiter": "git://github.com/graasp/graasp-file-upload-limiter#main"
   },
   "devDependencies": {
     "@types/graasp": "git://github.com/graasp/graasp-types.git#master",
-    "fastify": "^3.0.0"
+    "fastify": "3.0.0"
   }
 }

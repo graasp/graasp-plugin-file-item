@@ -18,6 +18,7 @@ const pump = util.promisify(pipeline);
 
 const fastifyMultipart = require('fastify-multipart');
 const graaspFileUploadLimiter = require('graasp-file-upload-limiter');
+const contentDisposition = require('content-disposition');
 
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
@@ -154,7 +155,7 @@ module.exports = async (fastify, options) => {
     reply.type(mimetype);
     // this header will make the browser download the file with 'name' instead of
     // simply opening it and showing it
-    reply.header('Content-Disposition', `attachment; filename="${name}"`);
+    reply.header('Content-Disposition', contentDisposition(name));
 
     // TODO: can/should this be done in a worker (fastify piscina)?
     return fs.createReadStream(`${storageRootPath}/${path}`);
