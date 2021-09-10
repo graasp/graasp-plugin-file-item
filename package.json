@@ -5,9 +5,11 @@
     "node": ">=14.0.0"
   },
   "description": "FileItem fastify plugin for Graasp",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "scripts": {},
+  "main": "dist/plugin.js",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "tsc"
+  },
   "license": "MIT",
   "some-comments": [
     "fastify-error: ~0.2.0"
@@ -18,7 +20,10 @@
     "graasp-file-upload-limiter": "git://github.com/graasp/graasp-file-upload-limiter#main"
   },
   "devDependencies": {
+    "@types/content-disposition": "0.5.4",
     "@types/graasp": "git://github.com/graasp/graasp-types.git#master",
-    "fastify": "3.0.0"
+    "@types/node": "16.9.1",
+    "fastify": "3.8.0",
+    "typescript": "4.4.2"
   }
 }
