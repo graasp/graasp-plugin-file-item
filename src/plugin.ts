@@ -4,26 +4,46 @@
  * - improve/add some logging
  * - tests
  */
+import fs from 'fs';
 
-const util = require('util');
+import { mkdir, stat, unlink, copyFile} from 'fs/promises';
 
-const fs = require('fs');
-const mkdir = util.promisify(fs.mkdir);
-const stat = util.promisify(fs.stat);
-const unlink = util.promisify(fs.unlink);
-const copyFile = util.promisify(fs.copyFile);
+// stream/promises is only available on node 15+
+// When migrating uncomment the following line
+// import { pipeline } from 'stream/promises';
 
-const { pipeline } = require('stream');
-const pump = util.promisify(pipeline);
+// Delete the following lines when migrating on node 15+
+import util from 'util';
+import stream from 'stream';
+const pipeline = util.promisify(stream.pipeline);
 
-const fastifyMultipart = require('fastify-multipart');
-const graaspFileUploadLimiter = require('graasp-file-upload-limiter');
-const contentDisposition = require('content-disposition');
+import { FastifyPluginAsync } from 'fastify';
+import fastifyMultipart from 'fastify-multipart';
+import { UnknownExtra, Item, IdParam, ParentIdParam } from 'graasp';
+
+import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
+import contentDisposition from 'content-disposition';
+
 
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
 
-const { download: downloadSchema, upload: uploadSchema } = require('./schemas/shared');
+import { download as downloadSchema, upload as uploadSchema } from './schema';
+
+interface FileItemExtra extends UnknownExtra {
+  file: { 
+    name:string, 
+    path:string, 
+    mimetype:string
+  }
+}
+
+interface GraaspFileItemOptions {
+  /**
+   * Filesystem root path where the uploaded files will be saved
+  */
+  storageRootPath: string
+}
 
 const ITEM_TYPE = 'file';
 const ORIGINAL_FILENAME_TRUNCATE_LIMIT = 100;
@@ -31,7 +51,7 @@ const DEFAULT_MAX_FILE_SIZE = 1024 * 1024 * 250; // 250MB
 
 const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
 
-module.exports = async (fastify, options) => {
+const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, options) => {
   const { items: { taskManager }, taskRunner: runner } = fastify;
   const { storageRootPath } = options;
 
@@ -41,8 +61,8 @@ module.exports = async (fastify, options) => {
 
   // register post delete handler to erase the file of a 'file item'
   const deleteItemTaskName = taskManager.getDeleteTaskName();
-  runner.setTaskPostHookHandler(deleteItemTaskName, (item, actor, { log }) => {
-    const { type: itemType, extra: { file } } = item;
+  runner.setTaskPostHookHandler(deleteItemTaskName, (item : Partial<Item<FileItemExtra>>, _actor, { log }) => {
+    const { type: itemType, extra: { file } = {}} = item;
     if (itemType !== ITEM_TYPE || !file) return;
 
     const { path: filepath } = file;
@@ -54,8 +74,8 @@ module.exports = async (fastify, options) => {
 
   // register pre copy handler to make a copy of the 'file item's file
   const copyItemTaskName = taskManager.getCopyTaskName();
-  runner.setTaskPreHookHandler(copyItemTaskName, async function (item) {
-    const { type: itemType, extra: { file } } = item;
+  runner.setTaskPreHookHandler(copyItemTaskName, async (item: Partial<Item<FileItemExtra>>) => {
+    const { type: itemType, extra: { file } = {} } = item;
     if (itemType !== ITEM_TYPE || !file) return;
 
     const { path: originalFilepath } = file;
@@ -72,7 +92,8 @@ module.exports = async (fastify, options) => {
     await copyFile(storageOriginalFilepath, storageFilepath);
 
     // update item copy's 'extra'
-    item.extra.file.path = filepath;
+    if(item.extra)
+      item.extra.file.path = filepath;
   });
 
 
@@ -93,9 +114,9 @@ module.exports = async (fastify, options) => {
   });
 
   // receive uploaded file(s) and create item(s)
-  fastify.post('/upload', { schema: uploadSchema }, async (request, reply) => {
+  fastify.post<{ Querystring: ParentIdParam}>('/upload', { schema: uploadSchema }, async (request, reply) => {
     const { query: { parentId }, member, log } = request;
-    const parts = await request.files();
+    const parts = request.files();
     let count = 0;
     let item;
 
@@ -109,7 +130,7 @@ module.exports = async (fastify, options) => {
       // 'pump' file to directory
       const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
       const storageFilepath = `${storageRootPath}/${filepath}`;
-      await pump(file, fs.createWriteStream(storageFilepath));
+      await pipeline(file, fs.createWriteStream(storageFilepath));
 
       // get file size
       const { size } = await stat(storageFilepath);
@@ -122,8 +143,8 @@ module.exports = async (fastify, options) => {
           type: ITEM_TYPE,
           extra: { file: { name: filename, path: filepath, size, mimetype, encoding } }
         };
-        const task = taskManager.createCreateTask(member, data, parentId);
-        item = await runner.runSingle(task, log);
+        const task = taskManager.createCreateTaskSequence(member, data, parentId);
+        item = await runner.runSingleSequence(task, log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -139,11 +160,11 @@ module.exports = async (fastify, options) => {
   });
 
   // download item's file
-  fastify.get('/:id/download', { schema: downloadSchema }, async (request, reply) => {
+  fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
     const { member, params: { id }, log } = request;
 
-    const task = taskManager.createGetTask(member, id);
-    const { type, extra: { file } } = await runner.runSingle(task, log);
+    const task = taskManager.createGetTaskSequence(member, id);
+    const { type, extra: { file } } = await runner.runSingleSequence(task, log) as Item<FileItemExtra>;
 
     if (type !== ITEM_TYPE || !file) {
       reply.status(400);
@@ -161,3 +182,5 @@ module.exports = async (fastify, options) => {
     return fs.createReadStream(`${storageRootPath}/${path}`);
   });
 };
+
+export default plugin;
