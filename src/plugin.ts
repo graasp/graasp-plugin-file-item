@@ -6,10 +6,18 @@
  */
 import fs from 'fs';
 
-import { mkdir, stat, unlink, copyFile} from 'fs/promises'
-import { pipeline } from 'stream/promises'
+import { mkdir, stat, unlink, copyFile} from 'fs/promises';
 
-import { FastifyPluginAsync } from 'fastify'
+// stream/promises is only available on node 15+
+// When migrating uncomment the following line
+// import { pipeline } from 'stream/promises';
+
+// Delete the following lines when migrating on node 15+
+import util from 'util';
+import stream from 'stream';
+const pipeline = util.promisify(stream.pipeline);
+
+import { FastifyPluginAsync } from 'fastify';
 import fastifyMultipart from 'fastify-multipart';
 import { UnknownExtra, Item, IdParam, ParentIdParam } from 'graasp';
 
