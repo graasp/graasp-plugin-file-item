@@ -61,7 +61,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
 
   // register post delete handler to erase the file of a 'file item'
   const deleteItemTaskName = taskManager.getDeleteTaskName();
-  runner.setTaskPostHookHandler(deleteItemTaskName, (item : Partial<Item<FileItemExtra>>, actor, { log }) => {
+  runner.setTaskPostHookHandler(deleteItemTaskName, (item : Partial<Item<FileItemExtra>>, _actor, { log }) => {
     const { type: itemType, extra: { file } = {}} = item;
     if (itemType !== ITEM_TYPE || !file) return;
 
@@ -143,8 +143,8 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
           type: ITEM_TYPE,
           extra: { file: { name: filename, path: filepath, size, mimetype, encoding } }
         };
-        const task = taskManager.createCreateTask(member, data, parentId);
-        item = await runner.runSingle(task, log);
+        const task = taskManager.createCreateTaskSequence(member, data, parentId);
+        item = await runner.runSingleSequence(task, log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -163,8 +163,8 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
   fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
     const { member, params: { id }, log } = request;
 
-    const task = taskManager.createGetTask<FileItemExtra>(member, id);
-    const { type, extra: { file } } = await runner.runSingle(task, log);
+    const task = taskManager.createGetTaskSequence(member, id);
+    const { type, extra: { file } } = await runner.runSingleSequence(task, log) as Item<FileItemExtra>;
 
     if (type !== ITEM_TYPE || !file) {
       reply.status(400);
