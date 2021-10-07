@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc",
     "prepare": "tsc",
-    "test": "npm run build && npx jest"
+    "test": "jest test --forceExit --coverage --verbose",
+    "test:watch": "npm run test -- --watchAll"
   },
   "license": "MIT",
   "some-comments": [
