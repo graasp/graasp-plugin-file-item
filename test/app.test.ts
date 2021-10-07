@@ -1,11 +1,10 @@
-
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { TaskRunner, ItemTaskManager } from 'graasp-test';
 import { v4 } from 'uuid';
 import build from './app';
-import { files, ROOT_PATH, FILE_PATHS, ITEM_FILE_TXT, ITEM_FOLDER, ITEM_FILE_PDF } from './constants';
+import { ROOT_PATH, FILE_PATHS, ITEM_FILE_TXT, ITEM_FOLDER, ITEM_FILE_PDF } from './constants';
 import { mockCreateTaskSequence, mockGetTaskSequence } from './mocks';
 
 const taskManager = new ItemTaskManager();
@@ -187,8 +186,3 @@ describe('Plugin Tests', () => {
     });
   });
 });
-
-
-
-
-
