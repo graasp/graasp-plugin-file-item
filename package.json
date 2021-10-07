@@ -19,7 +19,6 @@
   "dependencies": {
     "content-disposition": "0.5.3",
     "fastify-multipart": "4.0.0",
-    "graasp": "github:graasp/graasp",
     "graasp-file-upload-limiter": "git://github.com/graasp/graasp-file-upload-limiter.git#main",
     "graasp-types": "git://github.com/graasp/graasp-types.git#master"
   },
