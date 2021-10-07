@@ -1,7 +1,6 @@
 import fastify from 'fastify'
+import { ItemTaskManager, TaskRunner } from 'graasp-test';
 import plugin from '../src/plugin'
-import TaskManager from './mocks/task-manager';
-import Runner from './mocks/task-runner';
 
 const schemas = {
   $id: 'http://graasp.org/',
@@ -21,19 +20,16 @@ const schemas = {
   }
 };
 
-const build = async (storageRootPath='dist') => {
+const build = async ({ runner, taskManager, options } : { runner: TaskRunner, taskManager: ItemTaskManager, options?: any }) => {
 
   const app = fastify();
   app.addSchema(schemas)
 
-  app.decorate('taskRunner', new Runner()); 
+  app.decorate('taskRunner', runner); 
   app.decorate('items', {
-    taskManager: new TaskManager(),
+    taskManager: taskManager,
   });
-
-  await app.register(plugin, {
-    storageRootPath: storageRootPath
-  });
+  await app.register(plugin, options ?? { storageRootPath: 'dist'});
 
   return app;
 };

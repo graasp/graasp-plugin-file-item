@@ -7,7 +7,7 @@ const server = require('./app')({
   
   server.listen(3000, (err: Error) => {
     if (err) {
-      console.log(err)
-      process.exit(1)
+      console.log(err);
+      process.exit(1);
     }
   })
