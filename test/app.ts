@@ -20,16 +20,16 @@ const schemas = {
   }
 };
 
-const build = async ({ runner, taskManager, options } : { runner: TaskRunner, taskManager: ItemTaskManager, options?: any }) => {
+const build = async ({ runner, taskManager, options }: { runner: TaskRunner, taskManager: ItemTaskManager, options?: any }) => {
 
   const app = fastify();
   app.addSchema(schemas)
 
-  app.decorate('taskRunner', runner); 
+  app.decorate('taskRunner', runner);
   app.decorate('items', {
     taskManager: taskManager,
   });
-  await app.register(plugin, options ?? { storageRootPath: 'dist'});
+  await app.register(plugin, options ?? { storageRootPath: 'dist' });
 
   return app;
 };

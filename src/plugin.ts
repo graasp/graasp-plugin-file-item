@@ -2,11 +2,11 @@
  * TODOs:
  * - define schemas for fastify.multipart (?)
  * - improve/add some logging
- * - tests
  */
-import fs from 'fs';
+import fs, { promises as fsPromises } from 'fs';
+import { StatusCodes } from 'http-status-codes';
 
-import { mkdir, stat, unlink, copyFile} from 'fs/promises';
+const { mkdir, stat, unlink, copyFile, } = fsPromises;
 
 // stream/promises is only available on node 15+
 // When migrating uncomment the following line
@@ -22,34 +22,35 @@ import fastifyMultipart from 'fastify-multipart';
 import { UnknownExtra, Item, IdParam, ParentIdParam } from 'graasp';
 
 import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
-import contentDisposition from 'content-disposition';
 
 
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
 
 import { download as downloadSchema, upload as uploadSchema } from './schema';
+import GetFileFromItemTask from './tasks/get-file-from-item-task';
 
-interface FileItemExtra extends UnknownExtra {
-  file: { 
-    name:string, 
-    path:string, 
-    mimetype:string
+export interface FileItemExtra extends UnknownExtra {
+  file: {
+    name: string,
+    path: string,
+    mimetype: string
   }
 }
 
-interface GraaspFileItemOptions {
+export interface GraaspFileItemOptions {
   /**
    * Filesystem root path where the uploaded files will be saved
   */
   storageRootPath: string
 }
 
-const ITEM_TYPE = 'file';
+export const ITEM_TYPE = 'file';
 const ORIGINAL_FILENAME_TRUNCATE_LIMIT = 100;
 const DEFAULT_MAX_FILE_SIZE = 1024 * 1024 * 250; // 250MB
 
 const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
+
 
 const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, options) => {
   const { items: { taskManager }, taskRunner: runner } = fastify;
@@ -61,8 +62,8 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
 
   // register post delete handler to erase the file of a 'file item'
   const deleteItemTaskName = taskManager.getDeleteTaskName();
-  runner.setTaskPostHookHandler(deleteItemTaskName, (item : Partial<Item<FileItemExtra>>, _actor, { log }) => {
-    const { type: itemType, extra: { file } = {}} = item;
+  runner.setTaskPostHookHandler(deleteItemTaskName, (item: Partial<Item<FileItemExtra>>, _actor, { log }) => {
+    const { type: itemType, extra: { file } = {} } = item;
     if (itemType !== ITEM_TYPE || !file) return;
 
     const { path: filepath } = file;
@@ -92,7 +93,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
     await copyFile(storageOriginalFilepath, storageFilepath);
 
     // update item copy's 'extra'
-    if(item.extra)
+    if (item.extra)
       item.extra.file.path = filepath;
   });
 
@@ -114,7 +115,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
   });
 
   // receive uploaded file(s) and create item(s)
-  fastify.post<{ Querystring: ParentIdParam}>('/upload', { schema: uploadSchema }, async (request, reply) => {
+  fastify.post<{ Querystring: ParentIdParam }>('/upload', { schema: uploadSchema }, async (request, reply) => {
     const { query: { parentId }, member, log } = request;
     const parts = request.files();
     let count = 0;
@@ -152,34 +153,22 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
     }
 
     if (count === 1) {
-      reply.status(201);
+      reply.status(StatusCodes.CREATED);
       return item;
     } else {
-      reply.status(204);
+      reply.status(StatusCodes.NO_CONTENT);
     }
   });
+
 
   // download item's file
   fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
     const { member, params: { id }, log } = request;
 
-    const task = taskManager.createGetTaskSequence(member, id);
-    const { type, extra: { file } } = await runner.runSingleSequence(task, log) as Item<FileItemExtra>;
-
-    if (type !== ITEM_TYPE || !file) {
-      reply.status(400);
-      throw new Error(`Invalid '${ITEM_TYPE}' item`);
-    }
-
-    const { name, path, mimetype } = file;
-
-    reply.type(mimetype);
-    // this header will make the browser download the file with 'name' instead of
-    // simply opening it and showing it
-    reply.header('Content-Disposition', contentDisposition(name));
-
-    // TODO: can/should this be done in a worker (fastify piscina)?
-    return fs.createReadStream(`${storageRootPath}/${path}`);
+    const t1 = taskManager.createGetTaskSequence(member, id);
+    const t2 = new GetFileFromItemTask(member)
+    t2.getInput = () => ({ reply, path: storageRootPath, item: t1[0].result as Item<FileItemExtra> })
+    return runner.runSingleSequence([...t1, t2], log)
   });
 };
 
