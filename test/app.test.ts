@@ -10,9 +10,16 @@ import { mockCreateTaskSequence, mockGetTaskSequence } from './mocks';
 const taskManager = new ItemTaskManager();
 const runner = new TaskRunner();
 
+describe('Options', () => {
+
+  it('No root path should throw', async () => {
+    expect(async () => await build({ taskManager, runner, options: { storageRootPath: '' } })).rejects.toThrow(Error);
+  });
+});
+
 describe('Plugin Tests', () => {
 
-  beforeEach(() =>{
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
@@ -30,11 +37,11 @@ describe('Plugin Tests', () => {
 
   describe('GET /:id/download', () => {
     it('Successfully download txt file', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
-  
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
+
       mockGetTaskSequence(ITEM_FILE_TXT);
-  
+
       const app = await build({
         taskManager,
         runner,
@@ -42,22 +49,22 @@ describe('Plugin Tests', () => {
           storageRootPath: ROOT_PATH
         }
       });
-  
+
       const res = await app.inject({
         method: 'GET',
         url: `/${ITEM_FILE_TXT.id}/download`
       });
-  
+
       expect(res.statusCode).toBe(StatusCodes.OK);
       expect(res.body).toBeTruthy();
     });
-  
+
     it('Download folder should fail', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
-  
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
+
       mockGetTaskSequence(ITEM_FOLDER);
-  
+
       const app = await build({
         taskManager,
         runner,
@@ -65,21 +72,21 @@ describe('Plugin Tests', () => {
           storageRootPath: ROOT_PATH
         }
       });
-  
+
       const response = await app.inject({
         method: 'GET',
         url: `${ITEM_FOLDER.id}/download`
       });
-  
+
       expect(response.statusCode).toBe(StatusCodes.BAD_REQUEST);
     });
-  
+
     it('Download non-existent item should fail', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
-  
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
+
       mockGetTaskSequence({});
-  
+
       const app = await build({
         taskManager,
         runner,
@@ -87,20 +94,20 @@ describe('Plugin Tests', () => {
           storageRootPath: ROOT_PATH
         }
       });
-  
+
       const response = await app.inject({
         method: 'GET',
         url: `${v4()}/download`
       });
-  
+
       expect(response.statusCode).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
     });
   });
 
   describe('POST /upload', () => {
     it('Uploading single txt file', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
 
       mockCreateTaskSequence(ITEM_FILE_TXT);
 
@@ -123,8 +130,8 @@ describe('Plugin Tests', () => {
     });
 
     it('Uploading single pdf file', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
 
       mockCreateTaskSequence(ITEM_FILE_PDF);
 
@@ -147,8 +154,8 @@ describe('Plugin Tests', () => {
     });
 
     it('Upload multiple files', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
 
       const app = await build({
         taskManager,
@@ -169,8 +176,8 @@ describe('Plugin Tests', () => {
     });
 
     it('Upload without files should fail', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => {});
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => {});
+      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
+      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
 
       const app = await build({
         taskManager,
