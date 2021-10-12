@@ -2,6 +2,7 @@ import { Item, Member } from "graasp";
 import contentDisposition from 'content-disposition';
 import fs from 'fs';
 import type { FastifyReply } from 'fastify'
+import { StatusCodes } from 'http-status-codes'
 import { FileItemExtra, ITEM_TYPE } from "../plugin";
 import { BaseTask } from "./base-task";
 
@@ -31,14 +32,14 @@ class GetFileFromItemTask extends BaseTask<unknown>{
         const { reply, path: rootPath, item } = this.input
 
         if (!item) {
-            reply.status(400);
+            reply.status(StatusCodes.BAD_REQUEST);
             throw new Error(`Item is not defined`);
         }
 
         const { id, type, extra: { file } } = item
         this.targetId = id
         if (type !== ITEM_TYPE || !file) {
-            reply.status(400);
+            reply.status(StatusCodes.BAD_REQUEST);
             throw new Error(`Invalid '${ITEM_TYPE}' item`);
         }
 

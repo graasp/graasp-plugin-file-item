@@ -58,50 +58,7 @@ describe('Plugin Tests', () => {
       expect(res.statusCode).toBe(StatusCodes.OK);
       expect(res.body).toBeTruthy();
     });
-
-    it('Download folder should fail', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
-
-      mockGetTaskSequence(ITEM_FOLDER);
-
-      const app = await build({
-        taskManager,
-        runner,
-        options: {
-          storageRootPath: ROOT_PATH
-        }
-      });
-
-      const response = await app.inject({
-        method: 'GET',
-        url: `${ITEM_FOLDER.id}/download`
-      });
-
-      expect(response.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    });
-
-    it('Download non-existent item should fail', async () => {
-      jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(async (name, fn) => { });
-      jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(async (name, fn) => { });
-
-      mockGetTaskSequence({});
-
-      const app = await build({
-        taskManager,
-        runner,
-        options: {
-          storageRootPath: ROOT_PATH
-        }
-      });
-
-      const response = await app.inject({
-        method: 'GET',
-        url: `${v4()}/download`
-      });
-
-      expect(response.statusCode).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
-    });
+    // more exhautstive tests in task
   });
 
   describe('POST /upload', () => {

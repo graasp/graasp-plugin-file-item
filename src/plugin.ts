@@ -5,6 +5,7 @@
  * - tests
  */
 import fs from 'fs';
+import { StatusCodes } from 'http-status-codes';
 
 import { mkdir, stat, unlink, copyFile, } from 'fs/promises';
 
@@ -153,10 +154,10 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
     }
 
     if (count === 1) {
-      reply.status(201);
+      reply.status(StatusCodes.CREATED);
       return item;
     } else {
-      reply.status(204);
+      reply.status(StatusCodes.NO_CONTENT);
     }
   });
 
