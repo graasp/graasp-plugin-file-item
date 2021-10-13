@@ -168,7 +168,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
 
     const t1 = taskManager.createGetTaskSequence(member, id);
     const t2 = new GetFileFromItemTask(member)
-    t2.getInput = () => ({ reply, path: storageRootPath, item: t1[t1.length - 1].result as Item<FileItemExtra> })
+    t2.getInput = () => ({ reply, path: storageRootPath, item: t1[0].result as Item<FileItemExtra> })
     return runner.runSingleSequence([...t1, t2], log)
   });
 };

@@ -7,9 +7,9 @@ import { FileItemExtra, ITEM_TYPE } from "../plugin";
 import { BaseTask } from "./base-task";
 
 type InputType = {
-    reply: FastifyReply,
-    path: string,
-    item: Item<FileItemExtra>
+    reply?: FastifyReply,
+    path?: string,
+    item?: Item<FileItemExtra>
 }
 
 class GetFileFromItemTask extends BaseTask<unknown>{
@@ -23,7 +23,7 @@ class GetFileFromItemTask extends BaseTask<unknown>{
 
     constructor(member: Member, input?: InputType) {
         super(member)
-        this.input = input
+        this.input = input || {}
     }
 
     async run(): Promise<void> {
