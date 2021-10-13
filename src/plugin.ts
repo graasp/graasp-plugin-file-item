@@ -2,12 +2,11 @@
  * TODOs:
  * - define schemas for fastify.multipart (?)
  * - improve/add some logging
- * - tests
  */
-import fs from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 
-import { mkdir, stat, unlink, copyFile, } from 'fs/promises';
+const { mkdir, stat, unlink, copyFile, } = fsPromises;
 
 // stream/promises is only available on node 15+
 // When migrating uncomment the following line
