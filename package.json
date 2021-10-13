@@ -1,5 +1,5 @@
 {
-  "name": "graasp-file-item",
+  "name": "graasp-plugin-file-item",
   "version": "0.1.0",
   "engines": {
     "node": ">=14.0.0"
