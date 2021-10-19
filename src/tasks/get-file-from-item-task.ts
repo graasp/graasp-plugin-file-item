@@ -1,4 +1,4 @@
-import { Item, Member } from "graasp";
+import { Item, Actor } from "graasp";
 import contentDisposition from 'content-disposition';
 import fs from 'fs';
 import type { FastifyReply } from 'fastify'
@@ -21,8 +21,8 @@ class GetFileFromItemTask extends BaseTask<unknown>{
     input: InputType
     getInput: () => InputType;
 
-    constructor(member: Member, input?: InputType) {
-        super(member)
+    constructor(actor: Actor, input?: InputType) {
+        super(actor)
         this.input = input || {}
     }
 
