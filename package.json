@@ -19,7 +19,7 @@
   "dependencies": {
     "content-disposition": "0.5.3",
     "fastify-multipart": "4.0.0",
-    "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter",
+    "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter#8/update",
     "http-status-codes": "2.1.4"
   },
   "devDependencies": {
