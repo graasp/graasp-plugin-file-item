@@ -29,7 +29,11 @@ const build = async ({ runner, taskManager, options }: { runner: TaskRunner, tas
   app.decorate('items', {
     taskManager: taskManager,
   });
-  await app.register(plugin, options ?? { storageRootPath: 'dist' });
+  await app.register(plugin, options ?? { 
+    storageRootPath: 'dist', 
+    onFileUploaded: () => [],
+    downloadValidation: () => [] 
+  });
 
   return app;
 };

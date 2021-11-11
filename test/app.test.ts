@@ -1,7 +1,7 @@
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
-import { TaskRunner, ItemTaskManager } from 'graasp-test';
+import { TaskRunner, ItemTaskManager, Task } from 'graasp-test';
 import build from './app';
 import { ROOT_PATH, FILE_PATHS, ITEM_FILE_TXT, ITEM_FILE_PDF } from './constants';
 import { mockCreateTaskSequence, mockGetTaskSequence } from './mocks';
@@ -11,7 +11,15 @@ const runner = new TaskRunner();
 
 describe('Options', () => {
   it('No root path should throw', async () => {
-    expect(async () => await build({ taskManager, runner, options: { storageRootPath: '' } })).rejects.toThrow(Error);
+    expect(async () => await build({ 
+      taskManager,
+      runner,
+      options: { 
+        storageRootPath: '', 
+        onFileUploaded: () => [], 
+        downloadValidation: () => []  
+      } 
+    })).rejects.toThrow(Error);
   });
 });
 
@@ -27,7 +35,9 @@ describe('Plugin Tests', () => {
         taskManager,
         runner,
         options: {
-          storageRootPath: ''
+          storageRootPath: '',
+          onFileUploaded: () => [], 
+          downloadValidation: () => [] 
         }
       })).rejects.toThrow(Error);
     });
@@ -44,7 +54,9 @@ describe('Plugin Tests', () => {
         taskManager,
         runner,
         options: {
-          storageRootPath: ROOT_PATH
+          storageRootPath: ROOT_PATH,
+          onFileUploaded: () => [], 
+          downloadValidation: () => [new Task(ITEM_FILE_TXT)] 
         }
       });
 

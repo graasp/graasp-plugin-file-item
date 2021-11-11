@@ -172,7 +172,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
     const item = await runner.runSingleSequence(await options.downloadValidation(id, member), log) as Item<FileItemExtra>;
 
     const getFileTask = new GetFileFromItemTask(member, { reply, path: storageRootPath, item });
-    return runner.runSingle(getFileTask, log);
+    return runner.runSingleSequence([getFileTask], log);
   });
 };
 
