@@ -20,6 +20,15 @@ import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
 // const createError = require('fastify-error');
 // const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
 
+export type AuthTokenSubject = { member: string, item: string, origin: string, app: string }
+
+declare module 'fastify' {
+  interface FastifyRequest {
+      authTokenSubject: AuthTokenSubject;
+      member: Member;
+  }
+}
+
 import { download as downloadSchema, upload as uploadSchema } from './schema';
 import GetFileFromItemTask from './tasks/get-file-from-item-task';
 
@@ -36,16 +45,21 @@ export interface GraaspFileItemOptions {
    * Filesystem root path where the uploaded files will be saved
   */
   storageRootPath: string;
-
   onFileUploaded: (
     parentId: string,
     data: Partial<Item<FileItemExtra>>,
-    member: Member,
+    auth: {
+      member: Member<UnknownExtra>,
+      token: AuthTokenSubject
+    },
   ) => Promise<Task<Actor, unknown>[]>;
 
   downloadValidation: (
     id: string,
-    member: Member,
+    auth: {
+      member: Member<UnknownExtra>,
+      token: AuthTokenSubject
+    },
   ) => Promise<Task<Actor, unknown>[]>;
 }
 
@@ -120,7 +134,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
 
   // receive uploaded file(s) and create item(s)
   fastify.post<{ Querystring: ParentIdParam }>('/upload', { schema: uploadSchema }, async (request, reply) => {
-    const { query: { parentId }, member, log } = request;
+    const { query: { parentId }, authTokenSubject, member, log } = request;
     const parts = request.files();
     let count = 0;
     let item;
@@ -149,7 +163,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
           extra: { file: { name: filename, path: filepath, size, mimetype, encoding } }
         };
         
-        item = await runner.runSingleSequence(await options.onFileUploaded(parentId, data, member), log);
+        item = await runner.runSingleSequence(await options.onFileUploaded(parentId, data, { member, token: authTokenSubject}), log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -167,9 +181,9 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
 
   // download item's file
   fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
-    const { member, params: { id }, log } = request;
+    const { authTokenSubject, member, params: { id }, log } = request;
 
-    const item = await runner.runSingleSequence(await options.downloadValidation(id, member), log) as Item<FileItemExtra>;
+    const item = await runner.runSingleSequence(await options.downloadValidation(id, { member, token: authTokenSubject}), log) as Item<FileItemExtra>;
 
     const getFileTask = new GetFileFromItemTask(member, { reply, path: storageRootPath, item });
     return runner.runSingleSequence([getFileTask], log);
