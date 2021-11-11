@@ -8,18 +8,11 @@ import { StatusCodes } from 'http-status-codes';
 
 const { mkdir, stat, unlink, copyFile, } = fsPromises;
 
-// stream/promises is only available on node 15+
-// When migrating uncomment the following line
-// import { pipeline } from 'stream/promises';
-
-// Delete the following lines when migrating on node 15+
-import util from 'util';
-import stream from 'stream';
-const pipeline = util.promisify(stream.pipeline);
+import { pipeline } from 'stream/promises';
 
 import { FastifyPluginAsync } from 'fastify';
 import fastifyMultipart from 'fastify-multipart';
-import { UnknownExtra, Item, IdParam, ParentIdParam } from 'graasp';
+import { UnknownExtra, Item, IdParam, ParentIdParam, Member, Task, Actor } from 'graasp';
 
 import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
 
@@ -42,7 +35,18 @@ export interface GraaspFileItemOptions {
   /**
    * Filesystem root path where the uploaded files will be saved
   */
-  storageRootPath: string
+  storageRootPath: string;
+
+  onFileUploaded: (
+    parentId: string,
+    data: Partial<Item<FileItemExtra>>,
+    member: Member,
+  ) => Promise<Task<Actor, unknown>[]>;
+
+  downloadValidation: (
+    id: string,
+    member: Member,
+  ) => Promise<Task<Actor, unknown>[]>;
 }
 
 export const ITEM_TYPE = 'file';
@@ -144,8 +148,8 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
           type: ITEM_TYPE,
           extra: { file: { name: filename, path: filepath, size, mimetype, encoding } }
         };
-        const task = taskManager.createCreateTaskSequence(member, data, parentId);
-        item = await runner.runSingleSequence(task, log);
+        
+        item = await runner.runSingleSequence(await options.onFileUploaded(parentId, data, member), log);
       } catch (error) {
         await unlink(storageFilepath); // delete file if creation fails
         throw error;
@@ -165,10 +169,10 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
   fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
     const { member, params: { id }, log } = request;
 
-    const t1 = taskManager.createGetTaskSequence(member, id);
-    const t2 = new GetFileFromItemTask(member)
-    t2.getInput = () => ({ reply, path: storageRootPath, item: t1[0].result as Item<FileItemExtra> })
-    return runner.runSingleSequence([...t1, t2], log)
+    const item = await runner.runSingleSequence(await options.downloadValidation(id, member), log) as Item<FileItemExtra>;
+
+    const getFileTask = new GetFileFromItemTask(member, { reply, path: storageRootPath, item });
+    return runner.runSingle(getFileTask, log);
   });
 };
 
