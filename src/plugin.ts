@@ -183,14 +183,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
   fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
     const { authTokenSubject, member, params: { id }, log } = request;
 
-    const res = await runner.runSingleSequence(await options.downloadValidation(id, { member, token: authTokenSubject}), log);
-
-    const appData = res[0] as { data: Item<FileItemExtra>, id: string };
-
-    const item = appData?.data ? {
-      ...appData.data,
-      id: appData.id
-    } : res as Item<FileItemExtra>;
+    const item = await runner.runSingleSequence(await options.downloadValidation(id, { member, token: authTokenSubject}), log) as Item<FileItemExtra>;
 
     const getFileTask = new GetFileFromItemTask(member || { id: authTokenSubject?.member }, { reply, path: storageRootPath, item });
     return runner.runSingleSequence([getFileTask], log);
