@@ -192,7 +192,7 @@ const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, option
       id: appData.id
     } : res as Item<FileItemExtra>;
 
-    const getFileTask = new GetFileFromItemTask(member || { id: authTokenSubject.member }, { reply, path: storageRootPath, item });
+    const getFileTask = new GetFileFromItemTask(member || { id: authTokenSubject?.member }, { reply, path: storageRootPath, item });
     return runner.runSingleSequence([getFileTask], log);
   });
 };
