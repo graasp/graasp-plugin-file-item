@@ -23,6 +23,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     serviceMethod,
     serviceOptions,
     pathPrefix,
+    downloadPreHookTasks
   } = options;
   const {
     items: { taskManager: itemTaskManager },
@@ -143,9 +144,15 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       return tasks;
     },
 
-    downloadPreHookTasks: async ({ itemId }, { member }) => {
+    downloadPreHookTasks: async ({ itemId }, memberOptions) => {
+
+      // allow to override pre hook, necessary for public endpoints
+      if (downloadPreHookTasks) {
+        return downloadPreHookTasks?.({ itemId }, memberOptions);
+      }
+
       // check can read item
-      const tasks = itemTaskManager.createGetTaskSequence(member, itemId);
+      const tasks = itemTaskManager.createGetTaskSequence(memberOptions.member, itemId);
       const last = tasks[tasks.length - 1];
       // last task should return the filepath and mimetype
       // for the base plugin to get the corresponding file
@@ -180,7 +187,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   const copyItemTaskName = itemTaskManager.getCopyTaskName();
   runner.setTaskPreHookHandler<Item>(
     copyItemTaskName,
-    async (item, actor, {}, { original }) => {
+    async (item, actor, { }, { original }) => {
       const { id, type, extra } = item; // full copy with new `id`
 
       // copy file only if type is the current file type
