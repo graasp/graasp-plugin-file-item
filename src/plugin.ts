@@ -10,8 +10,8 @@ import basePlugin, {
 import {
   FILE_ITEM_TYPES,
   ORIGINAL_FILENAME_TRUNCATE_LIMIT,
-} from "./utils/constants";
-import { randomHexOf4 } from "./utils/helpers";
+} from "./constants";
+import { randomHexOf4 } from "./helpers";
 import { GraaspPluginFileItemOptions, FileItemExtra } from "./types";
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
@@ -23,7 +23,8 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     serviceMethod,
     serviceOptions,
     pathPrefix,
-    downloadPreHookTasks
+    downloadPreHookTasks,
+    uploadPreHookTasks,
   } = options;
   const {
     items: { taskManager: itemTaskManager },
@@ -108,10 +109,18 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     buildFilePath,
     serviceMethod,
 
-    uploadPreHookTasks: async (parentId, { member }) => {
+    uploadPreHookTasks: async (parentId, memberOptions) => {
+      // allow to override pre hook, necessary for public endpoints
+      if (uploadPreHookTasks) {
+        return uploadPreHookTasks?.(parentId, memberOptions);
+      }
+
       if (!parentId) return [];
 
-      const tasks = iMTM.createGetOfItemTaskSequence(member, parentId);
+      const tasks = iMTM.createGetOfItemTaskSequence(
+        memberOptions.member,
+        parentId
+      );
       tasks[1].input = { validatePermission: "write" };
       return tasks;
     },
@@ -145,14 +154,16 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     },
 
     downloadPreHookTasks: async ({ itemId }, memberOptions) => {
-
       // allow to override pre hook, necessary for public endpoints
       if (downloadPreHookTasks) {
         return downloadPreHookTasks?.({ itemId }, memberOptions);
       }
 
       // check can read item
-      const tasks = itemTaskManager.createGetTaskSequence(memberOptions.member, itemId);
+      const tasks = itemTaskManager.createGetTaskSequence(
+        memberOptions.member,
+        itemId
+      );
       const last = tasks[tasks.length - 1];
       // last task should return the filepath and mimetype
       // for the base plugin to get the corresponding file

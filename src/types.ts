@@ -4,7 +4,8 @@ import {
   ServiceMethod,
   GraaspLocalFileItemOptions,
   GraaspS3FileItemOptions,
-  DownloadPreHookTasksFunction
+  DownloadPreHookTasksFunction,
+  UploadPreHookTasksFunction,
 } from "graasp-plugin-file";
 
 export type FileItemExtra = S3FileItemExtra | LocalFileItemExtra;
@@ -19,5 +20,6 @@ export interface GraaspPluginFileItemOptions {
     local: GraaspLocalFileItemOptions;
   };
   shouldLimit?: boolean;
-  downloadPreHookTasks?: DownloadPreHookTasksFunction
+  downloadPreHookTasks?: DownloadPreHookTasksFunction;
+  uploadPreHookTasks?: UploadPreHookTasksFunction;
 }
