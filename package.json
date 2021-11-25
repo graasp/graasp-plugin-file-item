@@ -18,10 +18,8 @@
     "fastify-error: ~0.2.0"
   ],
   "dependencies": {
-    "content-disposition": "0.5.3",
-    "fastify-multipart": "4.0.0",
     "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter",
-    "http-status-codes": "2.1.4"
+    "graasp-plugin-file": "github:graasp/graasp-plugin-file#1/init"
   },
   "devDependencies": {
     "@types/content-disposition": "0.5.4",
