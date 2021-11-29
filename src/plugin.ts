@@ -11,7 +11,7 @@ import {
   FILE_ITEM_TYPES,
   ORIGINAL_FILENAME_TRUNCATE_LIMIT,
 } from "./constants";
-import { randomHexOf4 } from "./helpers";
+import { getFileExtra, getFilePathFromItemExtra, randomHexOf4 } from "./helpers";
 import { GraaspPluginFileItemOptions, FileItemExtra } from "./types";
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
@@ -38,14 +38,14 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     (!pathPrefix.endsWith("/") || !pathPrefix.startsWith("/"))
   ) {
     throw new Error(
-      "graasp-plugin-file: local storage service root path is malformed"
+      "graasp-plugin-file-item: local storage service root path is malformed"
     );
   }
 
   if (serviceMethod === ServiceMethod.S3) {
     if (!pathPrefix.endsWith("/")) {
       throw new Error(
-        "graasp-plugin-file: s3 storage service root path is malformed"
+        "graasp-plugin-file-item: s3 storage service root path is malformed"
       );
     }
 
@@ -56,7 +56,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       !serviceOptions?.s3?.s3SecretAccessKey
     ) {
       throw new Error(
-        "graasp-plugin-file: mandatory options for s3 service missing"
+        "graasp-plugin-file-item: mandatory options for s3 service missing"
       );
     }
   }
@@ -74,27 +74,6 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   const buildFilePath = (_itemId: string, _filename: string) => {
     const filepath = `${randomHexOf4()}/${randomHexOf4()}/${randomHexOf4()}-${Date.now()}`;
     return `${pathPrefix}${filepath}`;
-  };
-
-  const getFileExtra = (
-    extra: FileItemExtra
-  ): {
-    name: string;
-    path: string;
-    size: string;
-    mimetype: string;
-  } => {
-    switch (serviceMethod) {
-      case ServiceMethod.S3:
-        return (extra as S3FileItemExtra).s3File;
-      case ServiceMethod.LOCAL:
-      default:
-        return (extra as LocalFileItemExtra).file;
-    }
-  };
-
-  const getFilePathFromItemExtra = (extra: FileItemExtra) => {
-    return getFileExtra(extra).path;
   };
 
   // limit the upload depending on the user remaining storage
@@ -170,8 +149,8 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       last.getResult = () => {
         const extra = (tasks[0].result as Item<FileItemExtra>).extra;
         return {
-          filepath: getFilePathFromItemExtra(extra),
-          mimetype: getFileExtra(extra).mimetype,
+          filepath: getFilePathFromItemExtra(serviceMethod, extra),
+          mimetype: getFileExtra(serviceMethod, extra).mimetype,
         };
       };
       return tasks;
@@ -187,7 +166,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     async ({ id, type, extra }, _actor) => {
       // delete file only if type is the current file type
       if (!id || type !== SERVICE_ITEM_TYPE) return;
-      const filepath = getFilePathFromItemExtra(extra as FileItemExtra);
+      const filepath = getFilePathFromItemExtra(serviceMethod, extra as FileItemExtra);
 
       const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
       await runner.runSingle(task);
@@ -212,7 +191,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
         newId: item.id,
         originalPath,
         newFilePath,
-        mimetype: getFileExtra(extra as FileItemExtra).mimetype,
+        mimetype: getFileExtra(serviceMethod, extra as FileItemExtra).mimetype,
       });
       const filepath = (await runner.runSingle(task)) as string;
 
