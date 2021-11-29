@@ -75,34 +75,12 @@ describe("Options", () => {
       const app = await build(buildAppOptions(buildLocalOptions()));
       expect(app).toBeTruthy();
     });
-    it("Invalid rootpath should throw", async () => {
-      expect(
-        async () => await build(buildAppOptions(buildLocalOptions("")))
-      ).rejects.toThrow(Error);
-      expect(
-        async () => await build(buildAppOptions(buildLocalOptions("hello")))
-      ).rejects.toThrow(Error);
-      expect(
-        async () => await build(buildAppOptions(buildLocalOptions("/hello")))
-      ).rejects.toThrow(Error);
-      expect(
-        async () => await build(buildAppOptions(buildLocalOptions("hello/")))
-      ).rejects.toThrow(Error);
-    });
   });
 
   describe("S3", () => {
     it("Valid options should resolve", async () => {
       const app = await build(buildAppOptions(buildS3Options()));
       expect(app).toBeTruthy();
-    });
-    it("Invalid rootpath should throw", async () => {
-      expect(
-        async () => await build(buildAppOptions(buildS3Options("")))
-      ).rejects.toThrow(Error);
-      expect(
-        async () => await build(buildAppOptions(buildS3Options("/hello")))
-      ).rejects.toThrow(Error);
     });
     // cannot check s3 options validity -> enforced with typescript
   });

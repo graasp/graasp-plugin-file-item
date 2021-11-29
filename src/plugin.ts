@@ -7,6 +7,7 @@ import basePlugin, {
   LocalFileItemExtra,
   S3FileItemExtra,
 } from "graasp-plugin-file";
+import path from "path";
 import {
   FILE_ITEM_TYPES,
   ORIGINAL_FILENAME_TRUNCATE_LIMIT,
@@ -32,20 +33,10 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     taskRunner: runner,
   } = fastify;
 
-  // CHECK PARAMS
-  if (
-    serviceMethod === ServiceMethod.LOCAL &&
-    (!pathPrefix.endsWith("/") || !pathPrefix.startsWith("/"))
-  ) {
-    throw new Error(
-      "graasp-plugin-file-item: local storage service root path is malformed"
-    );
-  }
-
   if (serviceMethod === ServiceMethod.S3) {
-    if (!pathPrefix.endsWith("/")) {
+    if(pathPrefix.startsWith('/')){
       throw new Error(
-        "graasp-plugin-file-item: s3 storage service root path is malformed"
+        "graasp-plugin-file-item: local storage service root path is malformed"
       );
     }
 
@@ -73,7 +64,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   // when we upload the file
   const buildFilePath = (_itemId: string, _filename: string) => {
     const filepath = `${randomHexOf4()}/${randomHexOf4()}/${randomHexOf4()}-${Date.now()}`;
-    return `${pathPrefix}${filepath}`;
+    return path.join(pathPrefix, filepath);
   };
 
   // limit the upload depending on the user remaining storage
