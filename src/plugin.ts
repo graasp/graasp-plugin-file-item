@@ -79,17 +79,17 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     buildFilePath,
     serviceMethod,
 
-    uploadPreHookTasks: async (parentId, memberOptions) => {
+    uploadPreHookTasks: async (data, memberOptions) => {
       // allow to override pre hook, necessary for public endpoints
       if (uploadPreHookTasks) {
-        return uploadPreHookTasks?.(parentId, memberOptions);
+        return uploadPreHookTasks?.(data, memberOptions);
       }
 
-      if (!parentId) return [];
+      if (!data.parentId) return [];
 
       const tasks = iMTM.createGetOfItemTaskSequence(
         memberOptions.member,
-        parentId
+        data.parentId
       );
       tasks[1].input = { validatePermission: "write" };
       return tasks;

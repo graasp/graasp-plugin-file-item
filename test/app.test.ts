@@ -47,16 +47,16 @@ const buildAppOptions = (options) => ({
   options,
 });
 
-const buildLocalOptions = (pathPrefix = "/prefix/") => ({
+const buildLocalOptions = (pathPrefix = "prefix/") => ({
   serviceMethod: ServiceMethod.LOCAL,
   pathPrefix,
   serviceOptions: {
     local: {
-      storageRootPath: "storageRootPath",
+      storageRootPath: "/storageRootPath",
     },
   },
 });
-const buildS3Options = (pathPrefix = "/prefix/", s3 = DEFAULT_S3_OPTIONS) => ({
+const buildS3Options = (pathPrefix = "prefix/", s3 = DEFAULT_S3_OPTIONS) => ({
   serviceMethod: ServiceMethod.S3,
   pathPrefix,
   serviceOptions: {
@@ -81,6 +81,11 @@ describe("Options", () => {
     it("Valid options should resolve", async () => {
       const app = await build(buildAppOptions(buildS3Options()));
       expect(app).toBeTruthy();
+    });
+    it("Invalid rootpath should throw", async () => {
+      expect(
+        async () => await build(buildAppOptions(buildS3Options("/hello")))
+      ).rejects.toThrow(Error);
     });
     // cannot check s3 options validity -> enforced with typescript
   });
