@@ -2206,7 +2206,7 @@ __metadata:
     "@types/node": 16.9.1
     fastify: 3.8.0
     graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter"
-    graasp-plugin-file: "github:graasp/graasp-plugin-file"
+    graasp-plugin-file: "github:graasp/graasp-plugin-file#3/fixS3"
     graasp-test: "github:graasp/graasp-test"
     jest: 27.2.0
     prettier: 2.4.1
@@ -2216,15 +2216,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"graasp-plugin-file@github:graasp/graasp-plugin-file":
+"graasp-plugin-file@github:graasp/graasp-plugin-file#3/fixS3":
   version: 0.1.0
-  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=3b44924700f77aaf0c91bf0516b772f18c10af8a"
+  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=bcdeee27efd3a73dbc98bd5ea9456d3186dacb1b"
   dependencies:
     aws-sdk: ^2.793.0
     content-disposition: 0.5.3
     fastify-multipart: 5.1.0
     http-status-codes: 2.1.4
-  checksum: ab6f93b8adbd21abca24012ff15c0439c5d91414bd365cac2f36d98d305a97e0754d3c44487fbdc8cec619aaa5d9505745139eaa2d086b3280e687d0c45accdb
+  checksum: 9d2f52f635ff9a659b74ee345483c24cdb1bf08e69b4c0a9ceeea3934f6aec1871102dcfd3ba814214f660c589a666f4d2d2092a65e4a917649c4fc0ea7fa442
   languageName: node
   linkType: hard
 
