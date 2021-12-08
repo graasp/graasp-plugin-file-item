@@ -1,3 +1,4 @@
+import path from 'path'
 import {
   ServiceMethod,
   LocalFileItemExtra,
@@ -28,4 +29,9 @@ export const getFileExtra = (serviceMethod,
 
 export const getFilePathFromItemExtra = (serviceMethod: ServiceMethod, extra: FileItemExtra) => {
   return getFileExtra(serviceMethod, extra).path;
+};
+
+export const buildFilePathFromPrefix = (pathPrefix) => {
+  const filepath = `${randomHexOf4()}/${randomHexOf4()}/${randomHexOf4()}-${Date.now()}`;
+  return path.join(pathPrefix, filepath);
 };
