@@ -175,7 +175,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       if (!id || type !== SERVICE_ITEM_TYPE) return;
 
       // filenames are not used
-      const originalPath = buildFilePath(original.id, "filename");
+      const originalPath = getFileExtra(serviceMethod, original.extra as FileItemExtra).path;
       const newFilePath = buildFilePath(item.id, "filename");
 
       const task = fileTaskManager.createCopyFileTask(actor, {
