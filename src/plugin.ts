@@ -9,11 +9,8 @@ import basePlugin, {
 } from "graasp-plugin-file";
 import path from "path";
 import { buildFilePathFromPrefix } from ".";
-import {
-  FILE_ITEM_TYPES,
-  ORIGINAL_FILENAME_TRUNCATE_LIMIT,
-} from "./constants";
-import { getFileExtra, getFilePathFromItemExtra, } from "./helpers";
+import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from "./constants";
+import { getFileExtra, getFilePathFromItemExtra } from "./helpers";
 import { GraaspPluginFileItemOptions, FileItemExtra } from "./types";
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
@@ -35,7 +32,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   } = fastify;
 
   if (serviceMethod === ServiceMethod.S3) {
-    if (pathPrefix.startsWith('/')) {
+    if (pathPrefix.startsWith("/")) {
       throw new Error(
         "graasp-plugin-file-item: local storage service root path is malformed"
       );
@@ -64,7 +61,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   // we cannot use a hash based on the itemid because we don't have an item id
   // when we upload the file
   const buildFilePath = (_itemId: string, _filename: string) => {
-    return buildFilePathFromPrefix(pathPrefix)
+    return buildFilePathFromPrefix(pathPrefix);
   };
 
   // limit the upload depending on the user remaining storage
@@ -154,13 +151,20 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   const deleteTaskName = itemTaskManager.getDeleteTaskName();
   runner.setTaskPostHookHandler<Item>(
     deleteTaskName,
-    async ({ id, type, extra }, _actor) => {
-      // delete file only if type is the current file type
-      if (!id || type !== SERVICE_ITEM_TYPE) return;
-      const filepath = getFilePathFromItemExtra(serviceMethod, extra as FileItemExtra);
+    async ({ id, type, extra }, _actor, { log }) => {
+      try {
+        // delete file only if type is the current file type
+        if (!id || type !== SERVICE_ITEM_TYPE) return;
+        const filepath = getFilePathFromItemExtra(
+          serviceMethod,
+          extra as FileItemExtra
+        );
 
-      const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
-      await runner.runSingle(task);
+        const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
+        await runner.runSingle(task);
+      } catch (err) {
+        log.error(err);
+      }
     }
   );
 
@@ -168,14 +172,17 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   const copyItemTaskName = itemTaskManager.getCopyTaskName();
   runner.setTaskPreHookHandler<Item>(
     copyItemTaskName,
-    async (item, actor, { }, { original }) => {
+    async (item, actor, {}, { original }) => {
       const { id, type, extra } = item; // full copy with new `id`
 
       // copy file only if type is the current file type
       if (!id || type !== SERVICE_ITEM_TYPE) return;
 
       // filenames are not used
-      const originalPath = getFileExtra(serviceMethod, original.extra as FileItemExtra).path;
+      const originalPath = getFileExtra(
+        serviceMethod,
+        original.extra as FileItemExtra
+      ).path;
       const newFilePath = buildFilePath(item.id, "filename");
 
       const task = fileTaskManager.createCopyFileTask(actor, {
