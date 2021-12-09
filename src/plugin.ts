@@ -163,6 +163,8 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
         const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
         await runner.runSingle(task);
       } catch (err) {
+        // we catch the error, it ensures the item is deleted even if the file is not
+        // this is especially useful for the files uploaded before the migration to the new plugin
         log.error(err);
       }
     }

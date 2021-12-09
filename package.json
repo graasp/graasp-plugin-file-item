@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter",
-    "graasp-plugin-file": "github:graasp/graasp-plugin-file#3/fixS3"
+    "graasp-plugin-file": "github:graasp/graasp-plugin-file"
   },
   "devDependencies": {
     "@types/content-disposition": "0.5.4",
