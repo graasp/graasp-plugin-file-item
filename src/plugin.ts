@@ -1,175 +1,208 @@
-/**
- * TODOs:
- * - define schemas for fastify.multipart (?)
- * - improve/add some logging
- */
-import fs, { promises as fsPromises } from 'fs';
-import { StatusCodes } from 'http-status-codes';
+import { FastifyPluginAsync } from "fastify";
+import { Item } from "graasp";
+import graaspFileUploadLimiter from "graasp-file-upload-limiter";
+import basePlugin, {
+  FileTaskManager,
+  ServiceMethod,
+  LocalFileItemExtra,
+  S3FileItemExtra,
+} from "graasp-plugin-file";
+import path from "path";
+import { buildFilePathFromPrefix } from ".";
+import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from "./constants";
+import { getFileExtra, getFilePathFromItemExtra } from "./helpers";
+import { GraaspPluginFileItemOptions, FileItemExtra } from "./types";
 
-const { mkdir, stat, unlink, copyFile, } = fsPromises;
+const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
+  fastify,
+  options
+) => {
+  const {
+    shouldLimit = false,
+    serviceMethod,
+    serviceOptions,
+    pathPrefix,
+    downloadPreHookTasks,
+    uploadPreHookTasks,
+  } = options;
+  const {
+    items: { taskManager: itemTaskManager },
+    itemMemberships: { taskManager: iMTM },
+    taskRunner: runner,
+  } = fastify;
 
-// stream/promises is only available on node 15+
-// When migrating uncomment the following line
-// import { pipeline } from 'stream/promises';
-
-// Delete the following lines when migrating on node 15+
-import util from 'util';
-import stream from 'stream';
-const pipeline = util.promisify(stream.pipeline);
-
-import { FastifyPluginAsync } from 'fastify';
-import fastifyMultipart from 'fastify-multipart';
-import { UnknownExtra, Item, IdParam, ParentIdParam } from 'graasp';
-
-import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
-
-
-// const createError = require('fastify-error');
-// const SomeError = createError('FST_GFIERR001', 'Unable to \'%s\' of %s');
-
-import { download as downloadSchema, upload as uploadSchema } from './schema';
-import GetFileFromItemTask from './tasks/get-file-from-item-task';
-
-export interface FileItemExtra extends UnknownExtra {
-  file: {
-    name: string,
-    path: string,
-    mimetype: string
-  }
-}
-
-export interface GraaspFileItemOptions {
-  /**
-   * Filesystem root path where the uploaded files will be saved
-  */
-  storageRootPath: string
-}
-
-export const ITEM_TYPE = 'file';
-const ORIGINAL_FILENAME_TRUNCATE_LIMIT = 100;
-const DEFAULT_MAX_FILE_SIZE = 1024 * 1024 * 250; // 250MB
-
-const randomHexOf4 = () => (Math.random() * (1 << 16) | 0).toString(16).padStart(4, '0');
-
-
-const plugin: FastifyPluginAsync<GraaspFileItemOptions> = async (fastify, options) => {
-  const { items: { taskManager }, taskRunner: runner } = fastify;
-  const { storageRootPath } = options;
-
-  if (!storageRootPath) {
-    throw new Error('graasp-file-item: missing plugin options');
-  }
-
-  // register post delete handler to erase the file of a 'file item'
-  const deleteItemTaskName = taskManager.getDeleteTaskName();
-  runner.setTaskPostHookHandler(deleteItemTaskName, (item: Partial<Item<FileItemExtra>>, _actor, { log }) => {
-    const { type: itemType, extra: { file } = {} } = item;
-    if (itemType !== ITEM_TYPE || !file) return;
-
-    const { path: filepath } = file;
-    const storageFilepath = `${storageRootPath}/${filepath}`;
-    unlink(storageFilepath)
-      // using request's logger instance. can't use arrow fn because 'log.error' uses 'this'.
-      .catch(function (error) { log.error(error) });
-  });
-
-  // register pre copy handler to make a copy of the 'file item's file
-  const copyItemTaskName = taskManager.getCopyTaskName();
-  runner.setTaskPreHookHandler(copyItemTaskName, async (item: Partial<Item<FileItemExtra>>) => {
-    const { type: itemType, extra: { file } = {} } = item;
-    if (itemType !== ITEM_TYPE || !file) return;
-
-    const { path: originalFilepath } = file;
-    const path = `${randomHexOf4()}/${randomHexOf4()}`;
-
-    // create directories path
-    await mkdir(`${storageRootPath}/${path}`, { recursive: true });
-
-    // copy file
-    const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
-    const storageFilepath = `${storageRootPath}/${filepath}`;
-
-    const storageOriginalFilepath = `${storageRootPath}/${originalFilepath}`;
-    await copyFile(storageOriginalFilepath, storageFilepath);
-
-    // update item copy's 'extra'
-    if (item.extra)
-      item.extra.file.path = filepath;
-  });
-
-
-  fastify.register(fastifyMultipart, {
-    limits: {
-      // fieldNameSize: 0,             // Max field name size in bytes (Default: 100 bytes).
-      // fieldSize: 1000000,           // Max field value size in bytes (Default: 1MB).
-      fields: 0,                       // Max number of non-file fields (Default: Infinity).
-      fileSize: DEFAULT_MAX_FILE_SIZE, // For multipart forms, the max file size (Default: Infinity).
-      files: 5,                        // Max number of file fields (Default: Infinity).
-      // headerPairs: 2000             // Max number of header key=>value pairs (Default: 2000 - same as node's http).
+  if (serviceMethod === ServiceMethod.S3) {
+    if (pathPrefix.startsWith("/")) {
+      throw new Error(
+        "graasp-plugin-file-item: local storage service root path is malformed"
+      );
     }
-  });
 
-  fastify.register(graaspFileUploadLimiter, {
-    sizePath: 'file.size',
-    type: ITEM_TYPE
-  });
+    if (
+      !serviceOptions?.s3?.s3Region ||
+      !serviceOptions?.s3?.s3Bucket ||
+      !serviceOptions?.s3?.s3AccessKeyId ||
+      !serviceOptions?.s3?.s3SecretAccessKey
+    ) {
+      throw new Error(
+        "graasp-plugin-file-item: mandatory options for s3 service missing"
+      );
+    }
+  }
 
-  // receive uploaded file(s) and create item(s)
-  fastify.post<{ Querystring: ParentIdParam }>('/upload', { schema: uploadSchema }, async (request, reply) => {
-    const { query: { parentId }, member, log } = request;
-    const parts = request.files();
-    let count = 0;
-    let item;
+  // define current item type
+  const SERVICE_ITEM_TYPE =
+    serviceMethod === ServiceMethod.S3
+      ? FILE_ITEM_TYPES.S3
+      : FILE_ITEM_TYPES.LOCAL;
 
-    for await (const { file, filename, mimetype, encoding } of parts) {
-      count++;
-      const path = `${randomHexOf4()}/${randomHexOf4()}`;
+  const fileTaskManager = new FileTaskManager(serviceOptions, serviceMethod);
 
-      // create directories path
-      await mkdir(`${storageRootPath}/${path}`, { recursive: true });
+  // we cannot use a hash based on the itemid because we don't have an item id
+  // when we upload the file
+  const buildFilePath = (_itemId: string, _filename: string) => {
+    return buildFilePathFromPrefix(pathPrefix);
+  };
 
-      // 'pump' file to directory
-      const filepath = `${path}/${randomHexOf4()}-${Date.now()}`;
-      const storageFilepath = `${storageRootPath}/${filepath}`;
-      await pipeline(file, fs.createWriteStream(storageFilepath));
+  // limit the upload depending on the user remaining storage
+  if (shouldLimit) {
+    fastify.register(graaspFileUploadLimiter, {
+      sizePath: `${SERVICE_ITEM_TYPE}.size`,
+      type: SERVICE_ITEM_TYPE,
+    });
+  }
 
-      // get file size
-      const { size } = await stat(storageFilepath);
+  fastify.register(basePlugin, {
+    buildFilePath,
+    serviceMethod,
 
-      try {
-        // create 'file' item
-        const name = filename.substring(0, ORIGINAL_FILENAME_TRUNCATE_LIMIT);
-        const data = {
-          name,
-          type: ITEM_TYPE,
-          extra: { file: { name: filename, path: filepath, size, mimetype, encoding } }
+    uploadPreHookTasks: async (data, memberOptions) => {
+      // allow to override pre hook, necessary for public endpoints
+      if (uploadPreHookTasks) {
+        return uploadPreHookTasks?.(data, memberOptions);
+      }
+
+      if (!data.parentId) return [];
+
+      const tasks = iMTM.createGetOfItemTaskSequence(
+        memberOptions.member,
+        data.parentId
+      );
+      tasks[1].input = { validatePermission: "write" };
+      return tasks;
+    },
+
+    uploadPostHookTasks: async (
+      { filename, itemId: parentId, filepath, size, mimetype },
+      { member }
+    ) => {
+      // get metadata from upload task
+      const name = filename.substring(0, ORIGINAL_FILENAME_TRUNCATE_LIMIT);
+      const data = {
+        name,
+        type: SERVICE_ITEM_TYPE,
+        extra: {
+          [SERVICE_ITEM_TYPE]: {
+            name: filename,
+            path: filepath,
+            size,
+            mimetype,
+          },
+        },
+      };
+      // create corresponding item
+      const tasks = itemTaskManager.createCreateTaskSequence(
+        member,
+        data,
+        parentId
+      );
+
+      return tasks;
+    },
+
+    downloadPreHookTasks: async ({ itemId }, memberOptions) => {
+      // allow to override pre hook, necessary for public endpoints
+      if (downloadPreHookTasks) {
+        return downloadPreHookTasks?.({ itemId }, memberOptions);
+      }
+
+      // check can read item
+      const tasks = itemTaskManager.createGetTaskSequence(
+        memberOptions.member,
+        itemId
+      );
+      const last = tasks[tasks.length - 1];
+      // last task should return the filepath and mimetype
+      // for the base plugin to get the corresponding file
+      last.getResult = () => {
+        const extra = (tasks[0].result as Item<FileItemExtra>).extra;
+        return {
+          filepath: getFilePathFromItemExtra(serviceMethod, extra),
+          mimetype: getFileExtra(serviceMethod, extra).mimetype,
         };
-        const task = taskManager.createCreateTaskSequence(member, data, parentId);
-        item = await runner.runSingleSequence(task, log);
-      } catch (error) {
-        await unlink(storageFilepath); // delete file if creation fails
-        throw error;
+      };
+      return tasks;
+    },
+
+    serviceOptions,
+  });
+
+  // register post delete handler to remove the file object after item delete
+  const deleteTaskName = itemTaskManager.getDeleteTaskName();
+  runner.setTaskPostHookHandler<Item>(
+    deleteTaskName,
+    async ({ id, type, extra }, _actor, { log }) => {
+      try {
+        // delete file only if type is the current file type
+        if (!id || type !== SERVICE_ITEM_TYPE) return;
+        const filepath = getFilePathFromItemExtra(
+          serviceMethod,
+          extra as FileItemExtra
+        );
+
+        const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
+        await runner.runSingle(task);
+      } catch (err) {
+        // we catch the error, it ensures the item is deleted even if the file is not
+        // this is especially useful for the files uploaded before the migration to the new plugin
+        log.error(err);
       }
     }
+  );
 
-    if (count === 1) {
-      reply.status(StatusCodes.CREATED);
-      return item;
-    } else {
-      reply.status(StatusCodes.NO_CONTENT);
+  // register post copy handler to copy the file object after item copy
+  const copyItemTaskName = itemTaskManager.getCopyTaskName();
+  runner.setTaskPreHookHandler<Item>(
+    copyItemTaskName,
+    async (item, actor, {}, { original }) => {
+      const { id, type, extra } = item; // full copy with new `id`
+
+      // copy file only if type is the current file type
+      if (!id || type !== SERVICE_ITEM_TYPE) return;
+
+      // filenames are not used
+      const originalPath = getFileExtra(
+        serviceMethod,
+        original.extra as FileItemExtra
+      ).path;
+      const newFilePath = buildFilePath(item.id, "filename");
+
+      const task = fileTaskManager.createCopyFileTask(actor, {
+        newId: item.id,
+        originalPath,
+        newFilePath,
+        mimetype: getFileExtra(serviceMethod, extra as FileItemExtra).mimetype,
+      });
+      const filepath = (await runner.runSingle(task)) as string;
+
+      // update item copy's 'extra'
+      if (serviceMethod === ServiceMethod.S3) {
+        (item.extra as S3FileItemExtra).s3File.path = filepath;
+      } else {
+        (item.extra as LocalFileItemExtra).file.path = filepath;
+      }
     }
-  });
-
-
-  // download item's file
-  fastify.get<{ Params: IdParam }>('/:id/download', { schema: downloadSchema }, async (request, reply) => {
-    const { member, params: { id }, log } = request;
-
-    const t1 = taskManager.createGetTaskSequence(member, id);
-    const t2 = new GetFileFromItemTask(member)
-    t2.getInput = () => ({ reply, path: storageRootPath, item: t1[0].result as Item<FileItemExtra> })
-    return runner.runSingleSequence([...t1, t2], log)
-  });
+  );
 };
 
 export default plugin;
