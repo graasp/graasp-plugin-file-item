@@ -1,13 +1,13 @@
-import path from "path";
+import path from 'path';
 import {
   ServiceMethod,
   LocalFileItemExtra,
   S3FileItemExtra,
-} from "graasp-plugin-file";
-import { FileItemExtra } from "./types";
+} from 'graasp-plugin-file';
+import { FileItemExtra } from './types';
 
-export const randomHexOf4 = () =>
-  ((Math.random() * (1 << 16)) | 0).toString(16).padStart(4, "0");
+export const randomHexOf4 = (): string =>
+  ((Math.random() * (1 << 16)) | 0).toString(16).padStart(4, '0');
 
 export const getFileExtra = (
   serviceMethod: ServiceMethod,
@@ -30,11 +30,11 @@ export const getFileExtra = (
 export const getFilePathFromItemExtra = (
   serviceMethod: ServiceMethod,
   extra: FileItemExtra
-) => {
+): string => {
   return getFileExtra(serviceMethod, extra).path;
 };
 
-export const buildFilePathFromPrefix = (pathPrefix: string) => {
+export const buildFilePathFromPrefix = (pathPrefix: string): string => {
   const filepath = `${randomHexOf4()}/${randomHexOf4()}/${randomHexOf4()}-${Date.now()}`;
   return path.join(pathPrefix, filepath);
 };

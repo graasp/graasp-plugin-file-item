@@ -9,7 +9,6 @@ import {
 } from "graasp-test";
 import build from "./app";
 import {
-  ROOT_PATH,
   FILE_PATHS,
   ITEM_FILE_TXT,
   ITEM_FILE_PDF,
@@ -66,8 +65,8 @@ const buildS3Options = (pathPrefix = "prefix/", s3 = DEFAULT_S3_OPTIONS) => ({
 
 describe("Options", () => {
   beforeEach(() => {
-    jest.spyOn(runner, "setTaskPostHookHandler").mockImplementation(() => {});
-    jest.spyOn(runner, "setTaskPreHookHandler").mockImplementation(() => {});
+    jest.spyOn(runner, "setTaskPostHookHandler").mockImplementation(() => true);
+    jest.spyOn(runner, "setTaskPreHookHandler").mockImplementation(() => true);
   });
 
   describe("Local", () => {
@@ -116,10 +115,10 @@ describe("Plugin Tests", () => {
       async (service) => {
         jest
           .spyOn(runner, "setTaskPreHookHandler")
-          .mockImplementation(async () => {});
+          .mockImplementation(async () => true);
         jest
           .spyOn(runner, "setTaskPostHookHandler")
-          .mockImplementation(async () => {});
+          .mockImplementation(async () => true);
 
         const mock = mockGetTaskSequence(ITEM_FILE_TXT);
 
@@ -148,10 +147,10 @@ describe("Plugin Tests", () => {
 
       jest
         .spyOn(runner, "setTaskPreHookHandler")
-        .mockImplementation(async (name, fn) => {});
+        .mockImplementation(async (name, fn) => true);
       jest
         .spyOn(runner, "setTaskPostHookHandler")
-        .mockImplementation(async (name, fn) => {});
+        .mockImplementation(async (name, fn) => true);
       jest
         .spyOn(runner, "runMultipleSequences")
         .mockImplementation(async (sequences) => {
@@ -300,7 +299,9 @@ describe("Hooks", () => {
   describe("Delete Post Hook", () => {
     beforeEach(() => {
       jest.clearAllMocks();
-      jest.spyOn(runner, "setTaskPreHookHandler").mockImplementation(() => {});
+      jest
+        .spyOn(runner, "setTaskPreHookHandler")
+        .mockImplementation(() => true);
     });
 
     it("Stop if item is not a file item", async () => {
@@ -352,7 +353,9 @@ describe("Hooks", () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      jest.spyOn(runner, "setTaskPostHookHandler").mockImplementation(() => {});
+      jest
+        .spyOn(runner, "setTaskPostHookHandler")
+        .mockImplementation(() => true);
     });
 
     it("Stop if item is not a file item", async () => {

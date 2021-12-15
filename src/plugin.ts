@@ -7,7 +7,6 @@ import basePlugin, {
   LocalFileItemExtra,
   S3FileItemExtra,
 } from "graasp-plugin-file";
-import path from "path";
 import { buildFilePathFromPrefix } from ".";
 import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from "./constants";
 import { getFileExtra, getFilePathFromItemExtra } from "./helpers";
