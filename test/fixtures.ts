@@ -1,4 +1,5 @@
 import { Item, Member, MemberType } from "graasp";
+import { ServiceMethod } from "graasp-plugin-file";
 import { v4 } from "uuid";
 
 export const ROOT_PATH = "./test/files";
@@ -61,3 +62,50 @@ export const MEMBER: Member = {
   createdAt: "createdAt",
   updatedAt: "updatedAt",
 };
+
+const DEFAULT_S3_OPTIONS = {
+  s3Region: "s3Region",
+  s3Bucket: "s3Bucket",
+  s3AccessKeyId: "s3AccessKeyId",
+  s3SecretAccessKey: "s3SecretAccessKey",
+};
+
+export const buildPublicLocalOptions = (pathPrefix = "prefix/") => ({
+  serviceMethod: ServiceMethod.LOCAL,
+  pathPrefix,
+  serviceOptions: {
+    local: {
+      storageRootPath: "/storageRootPath",
+    },
+  },
+});
+export const buildPublicS3Options = (
+  pathPrefix = "prefix/",
+  s3 = DEFAULT_S3_OPTIONS
+) => ({
+  serviceMethod: ServiceMethod.S3,
+  pathPrefix,
+  serviceOptions: {
+    s3,
+  },
+});
+
+export const buildLocalOptions = (pathPrefix = "prefix/") => ({
+  serviceMethod: ServiceMethod.LOCAL,
+  pathPrefix,
+  serviceOptions: {
+    local: {
+      storageRootPath: "/storageRootPath",
+    },
+  },
+});
+export const buildS3Options = (
+  pathPrefix = "prefix/",
+  s3 = DEFAULT_S3_OPTIONS
+) => ({
+  serviceMethod: ServiceMethod.S3,
+  pathPrefix,
+  serviceOptions: {
+    s3,
+  },
+});

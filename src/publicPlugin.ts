@@ -8,7 +8,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   fastify,
   options
 ) => {
-  const { serviceMethod, pathPrefix, shouldLimit } = options;
+  const { serviceMethod, pathPrefix, shouldLimit, serviceOptions } = options;
   const {
     public: {
       items: { taskManager: pITM },
@@ -20,12 +20,9 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     shouldLimit,
     pathPrefix,
     serviceMethod: serviceMethod,
-    serviceOptions: {
-      s3: fastify.s3FileItemPluginOptions,
-      local: fastify.fileItemPluginOptions,
-    },
-    uploadPreHookTasks: async (id) => {
-      throw new CannotEditPublicItem(id);
+    serviceOptions,
+    uploadPreHookTasks: async (payload) => {
+      throw new CannotEditPublicItem(payload);
     },
     downloadPreHookTasks: async ({ itemId: id }) => {
       const task = pITM.createGetPublicItemTask(graaspActor, { itemId: id });

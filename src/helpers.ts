@@ -1,13 +1,13 @@
-import path from 'path';
+import path from "path";
 import {
   ServiceMethod,
   LocalFileItemExtra,
   S3FileItemExtra,
-} from 'graasp-plugin-file';
-import { FileItemExtra } from './types';
+} from "graasp-plugin-file";
+import { FileItemExtra } from "./types";
 
 export const randomHexOf4 = (): string =>
-  ((Math.random() * (1 << 16)) | 0).toString(16).padStart(4, '0');
+  ((Math.random() * (1 << 16)) | 0).toString(16).padStart(4, "0");
 
 export const getFileExtra = (
   serviceMethod: ServiceMethod,

@@ -8,12 +8,15 @@ import {
   ItemMembershipTaskManager,
 } from "graasp-test";
 import build from "./app";
+import plugin from "../src/plugin";
 import {
   FILE_PATHS,
   ITEM_FILE_TXT,
   ITEM_FILE_PDF,
   ITEM_FOLDER,
   S3_ITEM_FILE_TXT,
+  buildLocalOptions,
+  buildS3Options,
 } from "./fixtures";
 import {
   mockCreateCopyFileTask,
@@ -28,13 +31,6 @@ import {
   LocalFileItemExtra,
 } from "graasp-plugin-file";
 
-const DEFAULT_S3_OPTIONS = {
-  s3Region: "s3Region",
-  s3Bucket: "s3Bucket",
-  s3AccessKeyId: "s3AccessKeyId",
-  s3SecretAccessKey: "s3SecretAccessKey",
-};
-
 const itemTaskManager = new ItemTaskManager();
 const itemMembershipTaskManager = new ItemMembershipTaskManager();
 const runner = new TaskRunner();
@@ -44,23 +40,7 @@ const buildAppOptions = (options) => ({
   itemMembershipTaskManager,
   runner,
   options,
-});
-
-const buildLocalOptions = (pathPrefix = "prefix/") => ({
-  serviceMethod: ServiceMethod.LOCAL,
-  pathPrefix,
-  serviceOptions: {
-    local: {
-      storageRootPath: "/storageRootPath",
-    },
-  },
-});
-const buildS3Options = (pathPrefix = "prefix/", s3 = DEFAULT_S3_OPTIONS) => ({
-  serviceMethod: ServiceMethod.S3,
-  pathPrefix,
-  serviceOptions: {
-    s3,
-  },
+  plugin,
 });
 
 describe("Options", () => {
