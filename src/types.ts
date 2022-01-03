@@ -8,6 +8,13 @@ import {
   UploadPreHookTasksFunction,
 } from "graasp-plugin-file";
 
+declare module "fastify" {
+  interface FastifyInstance {
+    s3FileItemPluginOptions?: GraaspS3FileItemOptions;
+    fileItemPluginOptions?: GraaspLocalFileItemOptions;
+  }
+}
+
 export type FileItemExtra = S3FileItemExtra | LocalFileItemExtra;
 
 export interface GraaspPluginFileItemOptions {

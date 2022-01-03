@@ -1,9 +1,12 @@
-import fastify from "fastify";
+import fastify, { FastifyPluginAsync } from "fastify";
+import { PublicItemTaskManager } from "graasp-plugin-public";
 import {
   ItemMembershipTaskManager,
   ItemTaskManager,
   TaskRunner,
 } from "graasp-test";
+import { Server } from "http";
+import { GraaspPluginFileItemOptions } from "../src";
 import plugin from "../src/plugin";
 
 const schemas = {
@@ -25,17 +28,21 @@ const schemas = {
   },
 };
 
-const build = async ({
+async function build<E>({
+  plugin,
   runner,
   itemTaskManager,
   itemMembershipTaskManager,
+  publicItemTaskManager,
   options,
 }: {
+  plugin: FastifyPluginAsync<E, Server>;
   runner: TaskRunner;
   itemTaskManager: ItemTaskManager;
   itemMembershipTaskManager: ItemMembershipTaskManager;
-  options?: any;
-}) => {
+  options?: E;
+  publicItemTaskManager?: PublicItemTaskManager;
+}) {
   const app = fastify();
   app.addSchema(schemas);
 
@@ -46,8 +53,14 @@ const build = async ({
   app.decorate("itemMemberships", {
     taskManager: itemMembershipTaskManager,
   });
-  await app.register(plugin, options ?? { pathPrefix: "/dist/" });
+  app.decorate("public", {
+    items: { taskManager: publicItemTaskManager },
+  });
+  await app.register(
+    plugin,
+    options ?? ({ pathPrefix: "/dist/" } as unknown as E)
+  );
 
   return app;
-};
+}
 export default build;
