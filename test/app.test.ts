@@ -1,14 +1,14 @@
-import FormData from "form-data";
-import { createReadStream } from "fs";
-import { StatusCodes } from "http-status-codes";
-import { v4 } from "uuid";
+import FormData from 'form-data';
+import { createReadStream } from 'fs';
+import { StatusCodes } from 'http-status-codes';
+import { v4 } from 'uuid';
 import {
   TaskRunner,
   ItemTaskManager,
   ItemMembershipTaskManager,
-} from "graasp-test";
-import build from "./app";
-import plugin from "../src/plugin";
+} from 'graasp-test';
+import build from './app';
+import plugin from '../src/plugin';
 import {
   FILE_PATHS,
   ITEM_FILE_TXT,
@@ -17,19 +17,20 @@ import {
   S3_ITEM_FILE_TXT,
   buildLocalOptions,
   buildS3Options,
-} from "./fixtures";
+  DEFAULT_LOGGER,
+} from './fixtures';
 import {
   mockCreateCopyFileTask,
   mockCreateDeleteFileTask,
   mockCreateTaskSequence,
   mockGetOfItemTaskSequence,
   mockGetTaskSequence,
-} from "./mocks";
+} from './mocks';
 import {
   ServiceMethod,
   S3FileItemExtra,
   LocalFileItemExtra,
-} from "graasp-plugin-file";
+} from 'graasp-plugin-file';
 
 const itemTaskManager = new ItemTaskManager();
 const itemMembershipTaskManager = new ItemMembershipTaskManager();
@@ -43,27 +44,27 @@ const buildAppOptions = (options) => ({
   plugin,
 });
 
-describe("Options", () => {
+describe('Options', () => {
   beforeEach(() => {
-    jest.spyOn(runner, "setTaskPostHookHandler").mockImplementation(() => true);
-    jest.spyOn(runner, "setTaskPreHookHandler").mockImplementation(() => true);
+    jest.spyOn(runner, 'setTaskPostHookHandler').mockImplementation(() => true);
+    jest.spyOn(runner, 'setTaskPreHookHandler').mockImplementation(() => true);
   });
 
-  describe("Local", () => {
-    it("Valid options should resolve", async () => {
+  describe('Local', () => {
+    it('Valid options should resolve', async () => {
       const app = await build(buildAppOptions(buildLocalOptions()));
       expect(app).toBeTruthy();
     });
   });
 
-  describe("S3", () => {
-    it("Valid options should resolve", async () => {
+  describe('S3', () => {
+    it('Valid options should resolve', async () => {
       const app = await build(buildAppOptions(buildS3Options()));
       expect(app).toBeTruthy();
     });
-    it("Invalid rootpath should throw", async () => {
+    it('Invalid rootpath should throw', async () => {
       expect(
-        async () => await build(buildAppOptions(buildS3Options("/hello")))
+        async () => await build(buildAppOptions(buildS3Options('/hello'))),
       ).rejects.toThrow(Error);
     });
     // cannot check s3 options validity -> enforced with typescript
@@ -81,33 +82,33 @@ const buildFileServiceOptions = (service) => {
   } else if (service === ServiceMethod.S3) {
     return buildS3Options();
   }
-  throw new Error("Service is not defined");
+  throw new Error('Service is not defined');
 };
 
-describe("Plugin Tests", () => {
+describe('Plugin Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("GET /:id/download", () => {
+  describe('GET /:id/download', () => {
     it.each(FILE_SERVICES)(
-      "%s : Successfully download txt file",
+      '%s : Successfully download txt file',
       async (service) => {
         jest
-          .spyOn(runner, "setTaskPreHookHandler")
+          .spyOn(runner, 'setTaskPreHookHandler')
           .mockImplementation(async () => true);
         jest
-          .spyOn(runner, "setTaskPostHookHandler")
+          .spyOn(runner, 'setTaskPostHookHandler')
           .mockImplementation(async () => true);
 
         const mock = mockGetTaskSequence(ITEM_FILE_TXT);
 
         const app = await build(
-          buildAppOptions(buildFileServiceOptions(service))
+          buildAppOptions(buildFileServiceOptions(service)),
         );
 
         const res = await app.inject({
-          method: "GET",
+          method: 'GET',
           url: `/${ITEM_FILE_TXT.id}/download`,
         });
 
@@ -117,43 +118,43 @@ describe("Plugin Tests", () => {
 
         // download pre hook is run
         expect(mock).toHaveBeenCalledTimes(1);
-      }
+      },
     );
   });
 
-  describe("POST /upload", () => {
+  describe('POST /upload', () => {
     beforeEach(() => {
       jest.clearAllMocks();
 
       jest
-        .spyOn(runner, "setTaskPreHookHandler")
-        .mockImplementation(async (name, fn) => true);
+        .spyOn(runner, 'setTaskPreHookHandler')
+        .mockImplementation(async (_name, _fn) => true);
       jest
-        .spyOn(runner, "setTaskPostHookHandler")
-        .mockImplementation(async (name, fn) => true);
+        .spyOn(runner, 'setTaskPostHookHandler')
+        .mockImplementation(async (_name, _fn) => true);
       jest
-        .spyOn(runner, "runMultipleSequences")
+        .spyOn(runner, 'runMultipleSequences')
         .mockImplementation(async (sequences) => {
           return sequences;
         });
     });
 
     it.each(FILE_SERVICES)(
-      "%s : Uploading single txt file",
+      '%s : Uploading single txt file',
       async (service) => {
         const mock = mockCreateTaskSequence(ITEM_FILE_TXT);
         const mockGetPermission = mockGetOfItemTaskSequence(true);
 
         const app = await build(
-          buildAppOptions(buildFileServiceOptions(service))
+          buildAppOptions(buildFileServiceOptions(service)),
         );
 
         const form = new FormData();
-        form.append("file", createReadStream(FILE_PATHS[0]));
+        form.append('file', createReadStream(FILE_PATHS[0]));
 
         const response = await app.inject({
-          method: "POST",
-          url: "/upload",
+          method: 'POST',
+          url: '/upload',
           payload: form,
           headers: form.getHeaders(),
         });
@@ -165,25 +166,25 @@ describe("Plugin Tests", () => {
         expect(mock).toHaveBeenCalledTimes(1);
         // upload pre hook is called only if parent id is defined
         expect(mockGetPermission).toHaveBeenCalledTimes(0);
-      }
+      },
     );
 
     it.each(FILE_SERVICES)(
-      "%s : Uploading single pdf file",
+      '%s : Uploading single pdf file',
       async (service) => {
         const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
         const mockGetPermission = mockGetOfItemTaskSequence(true);
 
         const app = await build(
-          buildAppOptions(buildFileServiceOptions(service))
+          buildAppOptions(buildFileServiceOptions(service)),
         );
 
         const form = new FormData();
-        form.append("file", createReadStream(FILE_PATHS[0]));
+        form.append('file', createReadStream(FILE_PATHS[0]));
 
         const response = await app.inject({
-          method: "POST",
-          url: "/upload",
+          method: 'POST',
+          url: '/upload',
           payload: form,
           headers: form.getHeaders(),
         });
@@ -195,24 +196,24 @@ describe("Plugin Tests", () => {
         expect(mock).toHaveBeenCalledTimes(1);
         // upload pre hook is called only if parent id is defined
         expect(mockGetPermission).toHaveBeenCalledTimes(0);
-      }
+      },
     );
 
-    it.each(FILE_SERVICES)("%s : Uploading in parent item", async (service) => {
+    it.each(FILE_SERVICES)('%s : Uploading in parent item', async (service) => {
       const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
       const mockGetPermission = mockGetOfItemTaskSequence(true);
 
       const app = await build(
-        buildAppOptions(buildFileServiceOptions(service))
+        buildAppOptions(buildFileServiceOptions(service)),
       );
 
       const form = new FormData();
-      form.append("file", createReadStream(FILE_PATHS[0]));
+      form.append('file', createReadStream(FILE_PATHS[0]));
 
       const parentId = v4();
 
       const response = await app.inject({
-        method: "POST",
+        method: 'POST',
         url: `/upload?id=${parentId}`,
         payload: form,
         headers: form.getHeaders(),
@@ -227,22 +228,22 @@ describe("Plugin Tests", () => {
       expect(mockGetPermission).toHaveBeenCalledTimes(1);
     });
 
-    it.each(FILE_SERVICES)("%s : Upload multiple files", async (service) => {
+    it.each(FILE_SERVICES)('%s : Upload multiple files', async (service) => {
       const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
       const mockGetPermission = mockGetOfItemTaskSequence(true);
 
       const app = await build(
-        buildAppOptions(buildFileServiceOptions(service))
+        buildAppOptions(buildFileServiceOptions(service)),
       );
 
       const form = new FormData();
-      form.append("file", createReadStream(FILE_PATHS[0]));
-      form.append("file", createReadStream(FILE_PATHS[1]));
+      form.append('file', createReadStream(FILE_PATHS[0]));
+      form.append('file', createReadStream(FILE_PATHS[1]));
 
       const parentId = v4();
 
       const response = await app.inject({
-        method: "POST",
+        method: 'POST',
         url: `/upload?id=${parentId}`,
         payload: form,
         headers: form.getHeaders(),
@@ -258,69 +259,69 @@ describe("Plugin Tests", () => {
     });
 
     it.each(FILE_SERVICES)(
-      "%s : Upload without files should fail",
+      '%s : Upload without files should fail',
       async (service) => {
         const app = await build(
-          buildAppOptions(buildFileServiceOptions(service))
+          buildAppOptions(buildFileServiceOptions(service)),
         );
 
         const response = await app.inject({
-          method: "POST",
-          url: "/upload",
+          method: 'POST',
+          url: '/upload',
         });
 
         expect(response.statusCode).toBe(StatusCodes.NOT_ACCEPTABLE);
-      }
+      },
     );
   });
 });
 
-describe("Hooks", () => {
-  describe("Delete Post Hook", () => {
+describe('Hooks', () => {
+  describe('Delete Post Hook', () => {
     beforeEach(() => {
       jest.clearAllMocks();
       jest
-        .spyOn(runner, "setTaskPreHookHandler")
+        .spyOn(runner, 'setTaskPreHookHandler')
         .mockImplementation(() => true);
     });
 
-    it("Stop if item is not a file item", async () => {
+    it('Stop if item is not a file item', async () => {
       jest
-        .spyOn(runner, "setTaskPostHookHandler")
+        .spyOn(runner, 'setTaskPostHookHandler')
         .mockImplementation(async (name, fn) => {
           if (name === itemTaskManager.getDeleteTaskName()) {
             const item = ITEM_FOLDER;
             const actor = DEFAULT_ACTOR;
             const fileTaskMock = mockCreateDeleteFileTask(true);
-            await fn(item, actor, { log: undefined });
+            await fn(item, actor, { log: DEFAULT_LOGGER });
             expect(fileTaskMock).toHaveBeenCalledTimes(0);
           }
         });
       await build(buildAppOptions(buildLocalOptions()));
     });
-    it("Delete corresponding file for file item", async () => {
+    it('Delete corresponding file for file item', async () => {
       jest
-        .spyOn(runner, "setTaskPostHookHandler")
+        .spyOn(runner, 'setTaskPostHookHandler')
         .mockImplementation(async (name, fn) => {
           if (name === itemTaskManager.getDeleteTaskName()) {
             const item = ITEM_FILE_TXT;
             const actor = DEFAULT_ACTOR;
             const fileTaskMock = mockCreateDeleteFileTask(true);
-            await fn(item, actor, { log: undefined });
+            await fn(item, actor, { log: DEFAULT_LOGGER });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
           }
         });
       await build(buildAppOptions(buildLocalOptions()));
     });
-    it("Delete corresponding file for s3 file item", async () => {
+    it('Delete corresponding file for s3 file item', async () => {
       jest
-        .spyOn(runner, "setTaskPostHookHandler")
+        .spyOn(runner, 'setTaskPostHookHandler')
         .mockImplementation(async (name, fn) => {
           if (name === itemTaskManager.getDeleteTaskName()) {
             const item = S3_ITEM_FILE_TXT;
             const actor = DEFAULT_ACTOR;
             const fileTaskMock = mockCreateDeleteFileTask(true);
-            await fn(item, actor, { log: undefined });
+            await fn(item, actor, { log: DEFAULT_LOGGER });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
           }
         });
@@ -328,59 +329,59 @@ describe("Hooks", () => {
     });
   });
 
-  describe("Copy Pre Hook", () => {
+  describe('Copy Pre Hook', () => {
     const taskName = itemTaskManager.getCopyTaskName();
 
     beforeEach(() => {
       jest.clearAllMocks();
       jest
-        .spyOn(runner, "setTaskPostHookHandler")
+        .spyOn(runner, 'setTaskPostHookHandler')
         .mockImplementation(() => true);
     });
 
-    it("Stop if item is not a file item", async () => {
+    it('Stop if item is not a file item', async () => {
       jest
-        .spyOn(runner, "setTaskPreHookHandler")
+        .spyOn(runner, 'setTaskPreHookHandler')
         .mockImplementation(async (name, fn) => {
           if (name === taskName) {
             const original = ITEM_FOLDER;
             const actor = DEFAULT_ACTOR;
-            const fileTaskMock = mockCreateCopyFileTask("newFilePath");
-            await fn(original, actor, { log: undefined }, { original });
+            const fileTaskMock = mockCreateCopyFileTask('newFilePath');
+            await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(0);
           }
         });
       await build(buildAppOptions(buildLocalOptions()));
     });
-    it("Copy corresponding file for file item", async () => {
+    it('Copy corresponding file for file item', async () => {
       jest
-        .spyOn(runner, "setTaskPreHookHandler")
+        .spyOn(runner, 'setTaskPreHookHandler')
         .mockImplementation(async (name, fn) => {
           if (name === taskName) {
             const original = ITEM_FILE_TXT;
             const actor = DEFAULT_ACTOR;
-            const fileTaskMock = mockCreateCopyFileTask("newFilePath");
-            await fn(original, actor, { log: undefined }, { original });
+            const fileTaskMock = mockCreateCopyFileTask('newFilePath');
+            await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
             expect((original.extra.file as LocalFileItemExtra).path).toEqual(
-              "newFilePath"
+              'newFilePath',
             );
           }
         });
       await build(buildAppOptions(buildLocalOptions()));
     });
-    it("Copy corresponding file for s3 file item", async () => {
+    it('Copy corresponding file for s3 file item', async () => {
       jest
-        .spyOn(runner, "setTaskPreHookHandler")
+        .spyOn(runner, 'setTaskPreHookHandler')
         .mockImplementation(async (name, fn) => {
           if (name === taskName) {
             const original = S3_ITEM_FILE_TXT;
             const actor = DEFAULT_ACTOR;
-            const fileTaskMock = mockCreateCopyFileTask("newFilePath");
-            await fn(original, actor, { log: undefined }, { original });
+            const fileTaskMock = mockCreateCopyFileTask('newFilePath');
+            await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
             expect((original.extra.s3File as S3FileItemExtra).path).toEqual(
-              "newFilePath"
+              'newFilePath',
             );
           }
         });

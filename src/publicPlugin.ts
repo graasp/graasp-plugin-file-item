@@ -1,12 +1,12 @@
-import { FastifyPluginAsync } from "fastify";
-import { getFileExtra, GraaspPluginFileItemOptions } from ".";
-import { CannotEditPublicItem } from "graasp-plugin-public";
-import { FileItemExtra } from "graasp-plugin-file";
-import fileItemPlugin from "./plugin";
+import { FastifyPluginAsync } from 'fastify';
+import { getFileExtra, GraaspPluginFileItemOptions } from '.';
+import { CannotEditPublicItem } from 'graasp-plugin-public';
+import { FileItemExtra } from 'graasp-plugin-file';
+import fileItemPlugin from './plugin';
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   fastify,
-  options
+  options,
 ) => {
   const { serviceMethod, pathPrefix, shouldLimit, serviceOptions } = options;
   const {
@@ -29,7 +29,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       task.getResult = () => {
         const extra = getFileExtra(
           serviceMethod,
-          task.result.extra as FileItemExtra
+          task.result.extra as FileItemExtra,
         );
         return {
           filepath: extra.path,
