@@ -1,33 +1,32 @@
-import fastify, { FastifyPluginAsync } from "fastify";
-import { PublicItemTaskManager } from "graasp-plugin-public";
+import fastify, { FastifyPluginAsync } from 'fastify';
+import { PublicItemTaskManager } from 'graasp-plugin-public';
 import {
   ItemMembershipTaskManager,
   ItemTaskManager,
   TaskRunner,
-} from "graasp-test";
-import { Server } from "http";
-import { GraaspPluginFileItemOptions } from "../src";
-import plugin from "../src/plugin";
+} from 'graasp-test';
+import { Server } from 'http';
 
 const schemas = {
-  $id: "http://graasp.org/",
+  $id: 'http://graasp.org/',
   definitions: {
     uuid: {
-      type: "string",
+      type: 'string',
       pattern:
-        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
     },
     idParam: {
-      type: "object",
-      required: ["id"],
+      type: 'object',
+      required: ['id'],
       properties: {
-        id: { $ref: "#/definitions/uuid" },
+        id: { $ref: '#/definitions/uuid' },
       },
       additionalProperties: false,
     },
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 async function build<E>({
   plugin,
   runner,
@@ -46,19 +45,19 @@ async function build<E>({
   const app = fastify();
   app.addSchema(schemas);
 
-  app.decorate("taskRunner", runner);
-  app.decorate("items", {
+  app.decorate('taskRunner', runner);
+  app.decorate('items', {
     taskManager: itemTaskManager,
   });
-  app.decorate("itemMemberships", {
+  app.decorate('itemMemberships', {
     taskManager: itemMembershipTaskManager,
   });
-  app.decorate("public", {
+  app.decorate('public', {
     items: { taskManager: publicItemTaskManager },
   });
   await app.register(
     plugin,
-    options ?? ({ pathPrefix: "/dist/" } as unknown as E)
+    options ?? ({ pathPrefix: '/dist/' } as unknown as E),
   );
 
   return app;

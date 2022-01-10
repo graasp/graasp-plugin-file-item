@@ -51,7 +51,8 @@ describe('Options', () => {
     });
     it('Invalid rootpath should throw', async () => {
       expect(
-        async () => await build(buildAppOptions(buildPublicS3Options('/hello')))
+        async () =>
+          await build(buildAppOptions(buildPublicS3Options('/hello'))),
       ).rejects.toThrow(Error);
     });
     // cannot check s3 options validity -> enforced with typescript
@@ -93,7 +94,7 @@ describe('Plugin Tests', () => {
         publicItemTaskManager.createGetPublicItemTask = mock;
 
         const app = await build(
-          buildAppOptions(buildFileServiceOptions(service))
+          buildAppOptions(buildFileServiceOptions(service)),
         );
 
         const res = await app.inject({
@@ -106,7 +107,7 @@ describe('Plugin Tests', () => {
 
         // download pre hook is run
         expect(mock).toHaveBeenCalledTimes(1);
-      }
+      },
     );
 
     it.each(FILE_SERVICES)(
@@ -127,7 +128,7 @@ describe('Plugin Tests', () => {
         publicItemTaskManager.createGetPublicItemTask = mock;
 
         const app = await build(
-          buildAppOptions(buildFileServiceOptions(service))
+          buildAppOptions(buildFileServiceOptions(service)),
         );
 
         await app.inject({
@@ -137,7 +138,7 @@ describe('Plugin Tests', () => {
 
         // check public permission
         expect(mock).toHaveBeenCalledTimes(1);
-      }
+      },
     );
   });
 
@@ -160,7 +161,7 @@ describe('Plugin Tests', () => {
 
     it.each(FILE_SERVICES)('%s : Upload should throw', async (service) => {
       const app = await build(
-        buildAppOptions(buildFileServiceOptions(service))
+        buildAppOptions(buildFileServiceOptions(service)),
       );
 
       const form = new FormData();

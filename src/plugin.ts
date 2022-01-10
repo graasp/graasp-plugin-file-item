@@ -1,20 +1,20 @@
-import { FastifyPluginAsync } from "fastify";
-import { Item } from "graasp";
-import graaspFileUploadLimiter from "graasp-file-upload-limiter";
+import { FastifyPluginAsync } from 'fastify';
+import { Item } from 'graasp';
+import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
 import basePlugin, {
   FileTaskManager,
   ServiceMethod,
   LocalFileItemExtra,
   S3FileItemExtra,
-} from "graasp-plugin-file";
-import { buildFilePathFromPrefix } from ".";
-import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from "./constants";
-import { getFileExtra, getFilePathFromItemExtra } from "./helpers";
-import { GraaspPluginFileItemOptions, FileItemExtra } from "./types";
+} from 'graasp-plugin-file';
+import { buildFilePathFromPrefix } from '.';
+import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from './constants';
+import { getFileExtra, getFilePathFromItemExtra } from './helpers';
+import { GraaspPluginFileItemOptions, FileItemExtra } from './types';
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   fastify,
-  options
+  options,
 ) => {
   const {
     shouldLimit = false,
@@ -31,9 +31,9 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   } = fastify;
 
   if (serviceMethod === ServiceMethod.S3) {
-    if (pathPrefix.startsWith("/")) {
+    if (pathPrefix.startsWith('/')) {
       throw new Error(
-        "graasp-plugin-file-item: local storage service root path is malformed"
+        'graasp-plugin-file-item: local storage service root path is malformed',
       );
     }
 
@@ -44,7 +44,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       !serviceOptions?.s3?.s3SecretAccessKey
     ) {
       throw new Error(
-        "graasp-plugin-file-item: mandatory options for s3 service missing"
+        'graasp-plugin-file-item: mandatory options for s3 service missing',
       );
     }
   }
@@ -85,15 +85,15 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
 
       const tasks = iMTM.createGetOfItemTaskSequence(
         memberOptions.member,
-        data.parentId
+        data.parentId,
       );
-      tasks[1].input = { validatePermission: "write" };
+      tasks[1].input = { validatePermission: 'write' };
       return tasks;
     },
 
     uploadPostHookTasks: async (
       { filename, itemId: parentId, filepath, size, mimetype },
-      { member }
+      { member },
     ) => {
       // get metadata from upload task
       const name = filename.substring(0, ORIGINAL_FILENAME_TRUNCATE_LIMIT);
@@ -113,7 +113,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       const tasks = itemTaskManager.createCreateTaskSequence(
         member,
         data,
-        parentId
+        parentId,
       );
 
       return tasks;
@@ -128,7 +128,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       // check can read item
       const tasks = itemTaskManager.createGetTaskSequence(
         memberOptions.member,
-        itemId
+        itemId,
       );
       const last = tasks[tasks.length - 1];
       // last task should return the filepath and mimetype
@@ -156,7 +156,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
         if (!id || type !== SERVICE_ITEM_TYPE) return;
         const filepath = getFilePathFromItemExtra(
           serviceMethod,
-          extra as FileItemExtra
+          extra as FileItemExtra,
         );
 
         const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
@@ -166,25 +166,27 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
         // this is especially useful for the files uploaded before the migration to the new plugin
         log.error(err);
       }
-    }
+    },
   );
 
   // register post copy handler to copy the file object after item copy
   const copyItemTaskName = itemTaskManager.getCopyTaskName();
   runner.setTaskPreHookHandler<Item>(
     copyItemTaskName,
-    async (item, actor, {}, { original }) => {
+    async (item, actor, { log }, { original }) => {
       const { id, type, extra } = item; // full copy with new `id`
 
       // copy file only if type is the current file type
       if (!id || type !== SERVICE_ITEM_TYPE) return;
 
+      log.debug('copy item file');
+
       // filenames are not used
       const originalPath = getFileExtra(
         serviceMethod,
-        original.extra as FileItemExtra
+        original.extra as FileItemExtra,
       ).path;
-      const newFilePath = buildFilePath(item.id, "filename");
+      const newFilePath = buildFilePath(item.id, 'filename');
 
       const task = fileTaskManager.createCopyFileTask(actor, {
         newId: item.id,
@@ -200,7 +202,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       } else {
         (item.extra as LocalFileItemExtra).file.path = filepath;
       }
-    }
+    },
   );
 };
 
