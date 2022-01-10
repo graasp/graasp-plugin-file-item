@@ -14,7 +14,7 @@
     "test:watch": "yarn test --watchAll",
     "prettier:check": "prettier --check \"{src,test}/**/*.ts\"",
     "prettier:write": "prettier --write \"{src,test}/**/*.ts\"",
-    "lint": "tsc --noEmit && eslint \"**/*.{js,ts}\" --fix",
+    "lint": "tsc --noEmit && eslint \"{src,test}/**/*.{js,ts}\" --fix",
     "pre-commit": "yarn prettier:check && yarn lint",
     "hooks:uninstall": "husky uninstall",
     "hooks:install": "husky install",
@@ -22,9 +22,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter#12/updateDep",
-    "graasp-plugin-file": "github:graasp/graasp-plugin-file#5/updateDep",
-    "graasp-plugin-public": "github:graasp/graasp-plugin-public#34/updateDep"
+    "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter",
+    "graasp-plugin-file": "github:graasp/graasp-plugin-file",
+    "graasp-plugin-public": "github:graasp/graasp-plugin-public"
   },
   "devDependencies": {
     "@commitlint/cli": "16.0.1",
