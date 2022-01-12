@@ -109,8 +109,9 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
           },
         },
         settings: {
-          hasThumbnail: true // TODO: depend on mimetype
-        }
+          // image files get automatically generated thumbnails
+          hasThumbnail: mimetype.startsWith('image'),
+        },
       };
       // create corresponding item
       const tasks = itemTaskManager.createCreateTaskSequence(
