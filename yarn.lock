@@ -3147,12 +3147,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graasp-file-upload-limiter@github:graasp/graasp-file-upload-limiter":
+"graasp-file-upload-limiter@github:graasp/graasp-file-upload-limiter#14/createPreHook":
   version: 0.1.0
-  resolution: "graasp-file-upload-limiter@https://github.com/graasp/graasp-file-upload-limiter.git#commit=3a78e3a42f4ae8b17eeadab3b5ceea627fbc909b"
+  resolution: "graasp-file-upload-limiter@https://github.com/graasp/graasp-file-upload-limiter.git#commit=9f450278acd4faa7d7c5dc18f534477dfecc25da"
   dependencies:
     slonik: ^27.1.0
-  checksum: 04fbe5b40b482868548f3dd586b5648c13898f172b5a4b5be6f536a63ef96028bac4a2bb793ab79d7e32c6b29fb9ff06059e92ae345e71935e485b5bba7f3b6c
+  checksum: 23b89c35e2e78f938d58d3adbf7b4df9594be3cd76fdfad63bcad1697fa56776241037f0934d46df7054be06a93bc8dc1748ae8c98d3b941c946534530319658
   languageName: node
   linkType: hard
 
@@ -3181,7 +3181,7 @@ __metadata:
     eslint: ^8.6.0
     eslint-config-prettier: ^8.3.0
     fastify: 3.25.3
-    graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter"
+    graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter#14/createPreHook"
     graasp-plugin-file: "github:graasp/graasp-plugin-file"
     graasp-plugin-public: "github:graasp/graasp-plugin-public"
     graasp-test: "github:graasp/graasp-test"

@@ -26,7 +26,10 @@ export interface GraaspPluginFileItemOptions {
     s3: GraaspS3FileItemOptions;
     local: GraaspLocalFileItemOptions;
   };
+
+  // upload limiter
   shouldLimit?: boolean;
+
   downloadPreHookTasks?: DownloadPreHookTasksFunction;
   uploadPreHookTasks?: UploadPreHookTasksFunction;
 }

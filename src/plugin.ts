@@ -7,6 +7,10 @@ import basePlugin, {
   LocalFileItemExtra,
   S3FileItemExtra,
 } from 'graasp-plugin-file';
+import {
+  FileUploadLimiterTaskManager,
+  FileUploadLimiterDbService,
+} from 'graasp-file-upload-limiter';
 import { buildFilePathFromPrefix } from '.';
 import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from './constants';
 import { getFileExtra, getFilePathFromItemExtra } from './helpers';
@@ -54,8 +58,12 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     serviceMethod === ServiceMethod.S3
       ? FILE_ITEM_TYPES.S3
       : FILE_ITEM_TYPES.LOCAL;
+  const SIZE_PATH = `${SERVICE_ITEM_TYPE}.size`;
 
   const fileTaskManager = new FileTaskManager(serviceOptions, serviceMethod);
+
+  const fULDS = new FileUploadLimiterDbService(SIZE_PATH);
+  const fULTM = new FileUploadLimiterTaskManager(fULDS);
 
   // we cannot use a hash based on the itemid because we don't have an item id
   // when we upload the file
@@ -64,9 +72,10 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   };
 
   // limit the upload depending on the user remaining storage
+  // set copy prehook
   if (shouldLimit) {
     fastify.register(graaspFileUploadLimiter, {
-      sizePath: `${SERVICE_ITEM_TYPE}.size`,
+      sizePath: SIZE_PATH,
       type: SERVICE_ITEM_TYPE,
     });
   }
@@ -76,19 +85,30 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     serviceMethod,
 
     uploadPreHookTasks: async (data, memberOptions) => {
+      const { member } = memberOptions;
+
       // allow to override pre hook, necessary for public endpoints
       if (uploadPreHookTasks) {
         return uploadPreHookTasks?.(data, memberOptions);
       }
 
-      if (!data.parentId) return [];
+      const tasks = [];
+      // check user remaining storage
+      if (shouldLimit) {
+        tasks.push(
+          fULTM.createCheckMemberStorageTask(member, {
+            memberId: member.id,
+            itemType: SERVICE_ITEM_TYPE,
+          }),
+        );
+      }
 
-      const tasks = iMTM.createGetOfItemTaskSequence(
-        memberOptions.member,
-        data.parentId,
-      );
-      tasks[1].input = { validatePermission: 'write' };
-      return tasks;
+      if (!data.parentId) return tasks;
+
+      // check member has permission to upload item in parent
+      const getTasks = iMTM.createGetOfItemTaskSequence(member, data.parentId);
+      getTasks[1].input = { validatePermission: 'write' };
+      return [...tasks, ...getTasks];
     },
 
     uploadPostHookTasks: async (
