@@ -645,12 +645,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graasp/translations@github:graasp/graasp-translations#1/init":
+"@graasp/translations@github:graasp/graasp-translations":
   version: 0.1.0
-  resolution: "@graasp/translations@https://github.com/graasp/graasp-translations.git#commit=5b8fe04d173263c37f8367f631350e08865f411e"
+  resolution: "@graasp/translations@https://github.com/graasp/graasp-translations.git#commit=452c17c0b4b5a5e216b8d647a9f821071b179213"
   dependencies:
     i18next: 21.6.11
-  checksum: 670ac2542a3a03fe6f6f44504be299ef93d5cd2608adcfae6173499a14ebd40f5775fff13bf3ef8af6bf670fe3379720d09380e669c4d65c390b42f4f67a70b4
+  checksum: b375f4ea5982845d74e354003017a872dc21c012da42c58f05d3ef4e086335788e9335a0c59c4954a6f489e0f89d97b17e10916e653eb6edf6f78f18fa89e878
   languageName: node
   linkType: hard
 
@@ -3165,14 +3165,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graasp-file-upload-limiter@github:graasp/graasp-file-upload-limiter#14/createPreHook":
+"graasp-file-upload-limiter@github:graasp/graasp-file-upload-limiter":
   version: 0.1.0
-  resolution: "graasp-file-upload-limiter@https://github.com/graasp/graasp-file-upload-limiter.git#commit=02063258838a1b232a5af05ac00098ccac7e46e9"
+  resolution: "graasp-file-upload-limiter@https://github.com/graasp/graasp-file-upload-limiter.git#commit=ef6c01d12da17a4966d1324f86c1d7586852e46e"
   dependencies:
-    "@graasp/translations": "github:graasp/graasp-translations#1/init"
+    "@graasp/translations": "github:graasp/graasp-translations"
     http-status-codes: 2.2.0
     slonik: ^27.1.0
-  checksum: a2030db8f14b64ccf8c22fa9c8558034319f0b883012eaab431b2a2ec462285af0b5e7395ceb81f619befccc814a3883473e82a49b4865ce48a687b87349e47a
+  checksum: 55befff917f1dfb5b36bb160211260318b99f4a40320129eecc4b101f70ab924a2fe387e9171c32bb6024963598985f438f88df7da581f7f401833a1c5fd9bfe
   languageName: node
   linkType: hard
 
@@ -3201,7 +3201,7 @@ __metadata:
     eslint: ^8.6.0
     eslint-config-prettier: ^8.3.0
     fastify: 3.25.3
-    graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter#14/createPreHook"
+    graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter"
     graasp-plugin-file: "github:graasp/graasp-plugin-file"
     graasp-plugin-public: "github:graasp/graasp-plugin-public"
     graasp-test: "github:graasp/graasp-test"

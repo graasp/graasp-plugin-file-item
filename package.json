@@ -22,7 +22,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter#14/createPreHook",
+    "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter",
     "graasp-plugin-file": "github:graasp/graasp-plugin-file",
     "graasp-plugin-public": "github:graasp/graasp-plugin-public"
   },
