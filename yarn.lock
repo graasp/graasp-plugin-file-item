@@ -345,6 +345,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.12.0":
+  version: 7.17.2
+  resolution: "@babel/runtime@npm:7.17.2"
+  dependencies:
+    regenerator-runtime: ^0.13.4
+  checksum: a48702d271ecc59c09c397856407afa29ff980ab537b3da58eeee1aeaa0f545402d340a1680c9af58aec94dfdcbccfb6abb211991b74686a86d03d3f6956cacd
+  languageName: node
+  linkType: hard
+
 "@babel/template@npm:^7.16.7, @babel/template@npm:^7.3.3":
   version: 7.16.7
   resolution: "@babel/template@npm:7.16.7"
@@ -633,6 +642,15 @@ __metadata:
   version: 1.1.2
   resolution: "@gar/promisify@npm:1.1.2"
   checksum: d05081e0887a49c178b75ee3067bd6ee086f73c154d121b854fb2e044e8a89cb1cbb6de3a0dd93a519b80f0531fda68b099dd7256205f7fbb3490324342f2217
+  languageName: node
+  linkType: hard
+
+"@graasp/translations@github:graasp/graasp-translations":
+  version: 0.1.0
+  resolution: "@graasp/translations@https://github.com/graasp/graasp-translations.git#commit=452c17c0b4b5a5e216b8d647a9f821071b179213"
+  dependencies:
+    i18next: 21.6.11
+  checksum: b375f4ea5982845d74e354003017a872dc21c012da42c58f05d3ef4e086335788e9335a0c59c4954a6f489e0f89d97b17e10916e653eb6edf6f78f18fa89e878
   languageName: node
   linkType: hard
 
@@ -3149,10 +3167,12 @@ __metadata:
 
 "graasp-file-upload-limiter@github:graasp/graasp-file-upload-limiter":
   version: 0.1.0
-  resolution: "graasp-file-upload-limiter@https://github.com/graasp/graasp-file-upload-limiter.git#commit=3a78e3a42f4ae8b17eeadab3b5ceea627fbc909b"
+  resolution: "graasp-file-upload-limiter@https://github.com/graasp/graasp-file-upload-limiter.git#commit=ef6c01d12da17a4966d1324f86c1d7586852e46e"
   dependencies:
+    "@graasp/translations": "github:graasp/graasp-translations"
+    http-status-codes: 2.2.0
     slonik: ^27.1.0
-  checksum: 04fbe5b40b482868548f3dd586b5648c13898f172b5a4b5be6f536a63ef96028bac4a2bb793ab79d7e32c6b29fb9ff06059e92ae345e71935e485b5bba7f3b6c
+  checksum: 55befff917f1dfb5b36bb160211260318b99f4a40320129eecc4b101f70ab924a2fe387e9171c32bb6024963598985f438f88df7da581f7f401833a1c5fd9bfe
   languageName: node
   linkType: hard
 
@@ -3390,6 +3410,15 @@ __metadata:
     uuid: ^8.3.2
     uuid-parse: ^1.1.0
   checksum: 311b286c35d2d9b6807e13c47afe151d90586c6a57076b5a69125f1945a953b6ca3afa9bcffa57f19f1afd989181b8ed33cedd1ce25dec1587198d78c1d91ed2
+  languageName: node
+  linkType: hard
+
+"i18next@npm:21.6.11":
+  version: 21.6.11
+  resolution: "i18next@npm:21.6.11"
+  dependencies:
+    "@babel/runtime": ^7.12.0
+  checksum: 42716a7519d6066a8c9400639ab80fba0b568ae02205b1155ec9c4e627704bb2181dd182ff5eb0c91f6c67c8038ddd0754214e1932de5699d488c21ffd617c5e
   languageName: node
   linkType: hard
 
@@ -5483,6 +5512,13 @@ __metadata:
     indent-string: ^4.0.0
     strip-indent: ^3.0.0
   checksum: fa1ef20404a2d399235e83cc80bd55a956642e37dd197b4b612ba7327bf87fa32745aeb4a1634b2bab25467164ab4ed9c15be2c307923dd08b0fe7c52431ae6b
+  languageName: node
+  linkType: hard
+
+"regenerator-runtime@npm:^0.13.4":
+  version: 0.13.9
+  resolution: "regenerator-runtime@npm:0.13.9"
+  checksum: 65ed455fe5afd799e2897baf691ca21c2772e1a969d19bb0c4695757c2d96249eb74ee3553ea34a91062b2a676beedf630b4c1551cc6299afb937be1426ec55e
   languageName: node
   linkType: hard
 
