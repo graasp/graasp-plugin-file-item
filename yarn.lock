@@ -3209,7 +3209,7 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     fastify: 3.27.4
     graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter"
-    graasp-plugin-file: "github:graasp/graasp-plugin-file#13/redirect"
+    graasp-plugin-file: "github:graasp/graasp-plugin-file"
     graasp-plugin-public: "github:graasp/graasp-plugin-public"
     graasp-test: "github:graasp/graasp-test"
     husky: 7.0.4
@@ -3222,9 +3222,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"graasp-plugin-file@github:graasp/graasp-plugin-file#13/redirect":
+"graasp-plugin-file@github:graasp/graasp-plugin-file":
   version: 0.1.0
-  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=d011e41a7294e73f4293fcff31991905d0d8fdbd"
+  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=11ff0fd59b6b9bcbd0d863364e2f6864dc330ace"
   dependencies:
     aws-sdk: 2.1074.0
     content-disposition: 0.5.4
