@@ -15,7 +15,6 @@ export const getFileExtra = (
 ): {
   name: string;
   path: string;
-  size: string;
   mimetype: string;
 } => {
   switch (serviceMethod) {

@@ -112,7 +112,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     },
 
     uploadPostHookTasks: async (
-      { filename, itemId: parentId, filepath, size, mimetype },
+      { filename, itemId: parentId, filepath, mimetype },
       { member },
     ) => {
       // get metadata from upload task
@@ -124,7 +124,6 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
           [SERVICE_ITEM_TYPE]: {
             name: filename,
             path: filepath,
-            size,
             mimetype,
           },
         },
