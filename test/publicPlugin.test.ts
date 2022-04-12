@@ -1,5 +1,5 @@
 import FormData from 'form-data';
-import { createReadStream } from 'fs';
+import fs, { createReadStream } from 'fs';
 import plugin from '../src/publicPlugin';
 import { StatusCodes } from 'http-status-codes';
 import {
@@ -8,7 +8,7 @@ import {
   ItemMembershipTaskManager,
 } from 'graasp-test';
 import build from './app';
-import { FILE_PATHS, ITEM_FILE_TXT } from './fixtures';
+import { FILE_PATHS, FILE_SERVICES, ITEM_FILE_TXT } from './fixtures';
 import { ServiceMethod } from 'graasp-plugin-file';
 import {
   CannotEditPublicItem,
@@ -30,6 +30,8 @@ const buildAppOptions = (options) => ({
   plugin,
   options,
 });
+
+const fileStream = createReadStream(FILE_PATHS[0]);
 
 describe('Options', () => {
   beforeEach(() => {
@@ -58,8 +60,6 @@ describe('Options', () => {
     // cannot check s3 options validity -> enforced with typescript
   });
 });
-
-const FILE_SERVICES = [ServiceMethod.LOCAL, ServiceMethod.S3];
 
 const buildFileServiceOptions = (service) => {
   if (service === ServiceMethod.LOCAL) {
@@ -142,7 +142,7 @@ describe('Plugin Tests', () => {
     );
   });
 
-  describe('POST /upload', () => {
+  describe.each(FILE_SERVICES)('POST /upload for %s', (service) => {
     beforeEach(() => {
       jest.clearAllMocks();
 
@@ -159,13 +159,14 @@ describe('Plugin Tests', () => {
         });
     });
 
-    it.each(FILE_SERVICES)('%s : Upload should throw', async (service) => {
+    const form = new FormData();
+    form.append('file', fileStream);
+    jest.spyOn(fs, 'createReadStream').mockImplementation(() => fileStream);
+
+    it('Upload should throw', async () => {
       const app = await build(
         buildAppOptions(buildFileServiceOptions(service)),
       );
-
-      const form = new FormData();
-      form.append('file', createReadStream(FILE_PATHS[0]));
 
       const response = await app.inject({
         method: 'POST',

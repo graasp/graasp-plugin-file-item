@@ -119,7 +119,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
             name: filename,
             path: filepath,
             mimetype,
-            size
+            size,
           },
         },
         settings: {
