@@ -12,7 +12,7 @@ import {
   FileUploadLimiterDbService,
 } from 'graasp-file-upload-limiter';
 import { buildFilePathFromPrefix } from '.';
-import { FILE_ITEM_TYPES, ORIGINAL_FILENAME_TRUNCATE_LIMIT } from './constants';
+import { ORIGINAL_FILENAME_TRUNCATE_LIMIT } from './constants';
 import { getFileExtra, getFilePathFromItemExtra } from './helpers';
 import { GraaspPluginFileItemOptions, FileItemExtra } from './types';
 
@@ -53,15 +53,9 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     }
   }
 
-  // define current item type
-  const SERVICE_ITEM_TYPE =
-    serviceMethod === ServiceMethod.S3
-      ? FILE_ITEM_TYPES.S3
-      : FILE_ITEM_TYPES.LOCAL;
-  const SIZE_PATH = `${SERVICE_ITEM_TYPE}.size`;
+  const SIZE_PATH = `${serviceMethod}.size`;
 
   const fileTaskManager = new FileTaskManager(serviceOptions, serviceMethod);
-
   const fULDS = new FileUploadLimiterDbService(SIZE_PATH);
   const fULTM = new FileUploadLimiterTaskManager(fULDS);
 
@@ -76,7 +70,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   if (shouldLimit) {
     fastify.register(graaspFileUploadLimiter, {
       sizePath: SIZE_PATH,
-      type: SERVICE_ITEM_TYPE,
+      type: serviceMethod,
     });
   }
 
@@ -98,7 +92,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
         tasks.push(
           fULTM.createCheckMemberStorageTask(member, {
             memberId: member.id,
-            itemType: SERVICE_ITEM_TYPE,
+            itemType: serviceMethod,
           }),
         );
       }
@@ -112,20 +106,20 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     },
 
     uploadPostHookTasks: async (
-      { filename, itemId: parentId, filepath, size, mimetype },
+      { filename, itemId: parentId, filepath, mimetype, size },
       { member },
     ) => {
       // get metadata from upload task
       const name = filename.substring(0, ORIGINAL_FILENAME_TRUNCATE_LIMIT);
       const data = {
         name,
-        type: SERVICE_ITEM_TYPE,
+        type: serviceMethod,
         extra: {
-          [SERVICE_ITEM_TYPE]: {
+          [serviceMethod]: {
             name: filename,
             path: filepath,
-            size,
             mimetype,
+            size,
           },
         },
         settings: {
@@ -177,7 +171,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
     async ({ id, type, extra }, _actor, { log }) => {
       try {
         // delete file only if type is the current file type
-        if (!id || type !== SERVICE_ITEM_TYPE) return;
+        if (!id || type !== serviceMethod) return;
         const filepath = getFilePathFromItemExtra(
           serviceMethod,
           extra as FileItemExtra,
@@ -201,7 +195,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       const { id, type, extra } = item; // full copy with new `id`
 
       // copy file only if type is the current file type
-      if (!id || type !== SERVICE_ITEM_TYPE) return;
+      if (!id || type !== serviceMethod) return;
 
       log.debug('copy item file');
 

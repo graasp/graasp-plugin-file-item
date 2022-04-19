@@ -1,5 +1,5 @@
 import FormData from 'form-data';
-import { createReadStream } from 'fs';
+import fs, { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { v4 } from 'uuid';
 import {
@@ -18,6 +18,8 @@ import {
   buildLocalOptions,
   buildS3Options,
   DEFAULT_LOGGER,
+  FILE_SERVICES,
+  DEFAULT_ACTOR,
 } from './fixtures';
 import {
   mockCreateCopyFileTask,
@@ -71,10 +73,9 @@ describe('Options', () => {
   });
 });
 
-const FILE_SERVICES = [ServiceMethod.LOCAL, ServiceMethod.S3];
-const DEFAULT_ACTOR = {
-  id: v4(),
-};
+const filepath = FILE_PATHS[0];
+const fileStream = createReadStream(filepath);
+jest.spyOn(fs, 'createReadStream').mockImplementation(() => fileStream);
 
 const buildFileServiceOptions = (service) => {
   if (service === ServiceMethod.LOCAL) {
@@ -122,7 +123,7 @@ describe('Plugin Tests', () => {
     );
   });
 
-  describe('POST /upload', () => {
+  describe.each(FILE_SERVICES)('POST /upload for %s', (service) => {
     beforeEach(() => {
       jest.clearAllMocks();
 
@@ -139,67 +140,41 @@ describe('Plugin Tests', () => {
         });
     });
 
-    it.each(FILE_SERVICES)(
-      '%s : Uploading single txt file',
-      async (service) => {
-        const mock = mockCreateTaskSequence(ITEM_FILE_TXT);
-        const mockGetPermission = mockGetOfItemTaskSequence(true);
+    const form = new FormData();
+    form.append('file', fileStream);
+    const form1 = new FormData();
+    form1.append('file', fileStream);
+    const form2 = new FormData();
+    form2.append('file', fileStream);
+    const form3 = new FormData();
+    form3.append('file', fileStream);
+    form3.append('file', createReadStream(FILE_PATHS[1]));
 
-        const app = await build(
-          buildAppOptions(buildFileServiceOptions(service)),
-        );
+    it('Uploading single txt file', async () => {
+      const mock = mockCreateTaskSequence(ITEM_FILE_TXT);
+      const mockGetPermission = mockGetOfItemTaskSequence(true);
 
-        const form = new FormData();
-        form.append('file', createReadStream(FILE_PATHS[0]));
+      const app = await build(
+        buildAppOptions(buildFileServiceOptions(service)),
+      );
 
-        const response = await app.inject({
-          method: 'POST',
-          url: '/upload',
-          payload: form,
-          headers: form.getHeaders(),
-        });
+      const response = await app.inject({
+        method: 'POST',
+        url: '/upload',
+        payload: form,
+        headers: form.getHeaders(),
+      });
 
-        expect(response.statusCode).toBe(StatusCodes.OK);
-        // at least one sequence is run
-        expect(await response.json()?.length).toEqual(1);
-        // upload post hook is called
-        expect(mock).toHaveBeenCalledTimes(1);
-        // upload pre hook is called only if parent id is defined
-        expect(mockGetPermission).toHaveBeenCalledTimes(0);
-      },
-    );
+      expect(response.statusCode).toBe(StatusCodes.OK);
+      // at least one sequence is run
+      expect(await response.json()?.length).toEqual(1);
+      // upload post hook is called
+      expect(mock).toHaveBeenCalledTimes(1);
+      // upload pre hook is called only if parent id is defined
+      expect(mockGetPermission).toHaveBeenCalledTimes(0);
+    });
 
-    it.each(FILE_SERVICES)(
-      '%s : Uploading single pdf file',
-      async (service) => {
-        const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
-        const mockGetPermission = mockGetOfItemTaskSequence(true);
-
-        const app = await build(
-          buildAppOptions(buildFileServiceOptions(service)),
-        );
-
-        const form = new FormData();
-        form.append('file', createReadStream(FILE_PATHS[0]));
-
-        const response = await app.inject({
-          method: 'POST',
-          url: '/upload',
-          payload: form,
-          headers: form.getHeaders(),
-        });
-
-        expect(response.statusCode).toBe(StatusCodes.OK);
-        // at least one sequence is run
-        expect(await response.json()?.length).toEqual(1);
-        // upload post hook is called
-        expect(mock).toHaveBeenCalledTimes(1);
-        // upload pre hook is called only if parent id is defined
-        expect(mockGetPermission).toHaveBeenCalledTimes(0);
-      },
-    );
-
-    it.each(FILE_SERVICES)('%s : Uploading in parent item', async (service) => {
+    it('Uploading single pdf file', async () => {
       const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
       const mockGetPermission = mockGetOfItemTaskSequence(true);
 
@@ -207,16 +182,37 @@ describe('Plugin Tests', () => {
         buildAppOptions(buildFileServiceOptions(service)),
       );
 
-      const form = new FormData();
-      form.append('file', createReadStream(FILE_PATHS[0]));
+      const response = await app.inject({
+        method: 'POST',
+        url: '/upload',
+        payload: form1,
+        headers: form1.getHeaders(),
+      });
+
+      expect(response.statusCode).toBe(StatusCodes.OK);
+      // at least one sequence is run
+      expect(await response.json()?.length).toEqual(1);
+      // upload post hook is called
+      expect(mock).toHaveBeenCalledTimes(1);
+      // upload pre hook is called only if parent id is defined
+      expect(mockGetPermission).toHaveBeenCalledTimes(0);
+    });
+
+    it('Uploading in parent item', async () => {
+      const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
+      const mockGetPermission = mockGetOfItemTaskSequence(true);
+
+      const app = await build(
+        buildAppOptions(buildFileServiceOptions(service)),
+      );
 
       const parentId = v4();
 
       const response = await app.inject({
         method: 'POST',
         url: `/upload?id=${parentId}`,
-        payload: form,
-        headers: form.getHeaders(),
+        payload: form2,
+        headers: form2.getHeaders(),
       });
 
       expect(response.statusCode).toBe(StatusCodes.OK);
@@ -228,7 +224,7 @@ describe('Plugin Tests', () => {
       expect(mockGetPermission).toHaveBeenCalledTimes(1);
     });
 
-    it.each(FILE_SERVICES)('%s : Upload multiple files', async (service) => {
+    it('Upload multiple files', async () => {
       const mock = mockCreateTaskSequence(ITEM_FILE_PDF);
       const mockGetPermission = mockGetOfItemTaskSequence(true);
 
@@ -236,17 +232,13 @@ describe('Plugin Tests', () => {
         buildAppOptions(buildFileServiceOptions(service)),
       );
 
-      const form = new FormData();
-      form.append('file', createReadStream(FILE_PATHS[0]));
-      form.append('file', createReadStream(FILE_PATHS[1]));
-
       const parentId = v4();
 
       const response = await app.inject({
         method: 'POST',
         url: `/upload?id=${parentId}`,
-        payload: form,
-        headers: form.getHeaders(),
+        payload: form3,
+        headers: form3.getHeaders(),
       });
 
       expect(response.statusCode).toBe(StatusCodes.OK);
@@ -258,21 +250,18 @@ describe('Plugin Tests', () => {
       expect(mockGetPermission).toHaveBeenCalledTimes(2);
     });
 
-    it.each(FILE_SERVICES)(
-      '%s : Upload without files should fail',
-      async (service) => {
-        const app = await build(
-          buildAppOptions(buildFileServiceOptions(service)),
-        );
+    it('Upload without files should fail', async () => {
+      const app = await build(
+        buildAppOptions(buildFileServiceOptions(service)),
+      );
 
-        const response = await app.inject({
-          method: 'POST',
-          url: '/upload',
-        });
+      const response = await app.inject({
+        method: 'POST',
+        url: '/upload',
+      });
 
-        expect(response.statusCode).toBe(StatusCodes.NOT_ACCEPTABLE);
-      },
-    );
+      expect(response.statusCode).toBe(StatusCodes.NOT_ACCEPTABLE);
+    });
   });
 });
 

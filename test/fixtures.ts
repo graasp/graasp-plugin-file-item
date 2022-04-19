@@ -128,3 +128,9 @@ export const DEFAULT_LOGGER: FastifyLoggerInstance = {
   debug: jest.fn(),
   child: jest.fn(),
 };
+
+export const FILE_SERVICES = [ServiceMethod.LOCAL, ServiceMethod.S3];
+
+export const DEFAULT_ACTOR = {
+  id: v4(),
+};
