@@ -687,15 +687,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graasp/translations@github:graasp/graasp-translations#7/filePlugin":
-  version: 0.1.0
-  resolution: "@graasp/translations@https://github.com/graasp/graasp-translations.git#commit=775429778cddcaf138f6d89921a230a65f00301e"
-  dependencies:
-    i18next: 21.6.11
-  checksum: cf1cf527bda35d9c78241f21c910e5aa45028c1fdf79f6fe8e7a3388c28b66638a68c6228c4a094ff65c4da491456056e73df2a21a3d366be5fab865ed548e9e
-  languageName: node
-  linkType: hard
-
 "@humanwhocodes/config-array@npm:^0.9.2":
   version: 0.9.5
   resolution: "@humanwhocodes/config-array@npm:0.9.5"
@@ -3225,7 +3216,7 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     fastify: 3.29.0
     graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter"
-    graasp-plugin-file: "github:graasp/graasp-plugin-file#10/translations"
+    graasp-plugin-file: "github:graasp/graasp-plugin-file"
     graasp-plugin-public: "github:graasp/graasp-plugin-public"
     graasp-test: "github:graasp/graasp-test"
     husky: 7.0.4
@@ -3238,17 +3229,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"graasp-plugin-file@github:graasp/graasp-plugin-file#10/translations":
+"graasp-plugin-file@github:graasp/graasp-plugin-file":
   version: 0.1.0
-  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=4a497b9ab70169b4d0317490e8bdba14537f0ad0"
+  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=92670726aacfa12bf8d08ceb24a3179d2750e8d2"
   dependencies:
     "@fastify/multipart": 6.0.0
-    "@graasp/translations": "github:graasp/graasp-translations#7/filePlugin"
+    "@graasp/translations": "github:graasp/graasp-translations"
     aws-sdk: 2.1111.0
     content-disposition: 0.5.4
     http-status-codes: 2.2.0
     node-fetch: 2.6.7
-  checksum: 1a4ae5f760d86536a62eaddabff2c1438ed8d5e83c8b1056b4bb9d54081ee44f556896f31958b833b6e054ee79d5cedc0393047af8d2793f1031f2860de1dbd9
+  checksum: e36ebd0f0d280c18df01182833f64df90cb1d157f1b805052ab642669109c54bc876cc6b800d51c4f9ab0a68c153271f0bfe6e370c7466abe6e2f1f88708bd8a
   languageName: node
   linkType: hard
 
