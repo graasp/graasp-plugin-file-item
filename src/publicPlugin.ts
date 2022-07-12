@@ -1,7 +1,9 @@
 import { FastifyPluginAsync } from 'fastify';
-import { getFileExtra, GraaspPluginFileItemOptions } from '.';
-import { CannotEditPublicItem } from 'graasp-plugin-public';
+
 import { FileItemExtra } from 'graasp-plugin-file';
+import { CannotEditPublicItem } from 'graasp-plugin-public';
+
+import { GraaspPluginFileItemOptions, getFileExtra } from '.';
 import fileItemPlugin from './plugin';
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (

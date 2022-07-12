@@ -1,7 +1,10 @@
-import { FastifyLoggerInstance } from 'fastify';
-import { Item, Member, MemberType } from 'graasp';
-import { ServiceMethod } from 'graasp-plugin-file';
 import { v4 } from 'uuid';
+
+import { FastifyLoggerInstance } from 'fastify';
+
+import { Item, Member, MemberType } from '@graasp/sdk';
+import { ServiceMethod } from 'graasp-plugin-file';
+
 import { GraaspPluginFileItemOptions } from '../src';
 
 export const ROOT_PATH = './test/files';

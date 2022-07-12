@@ -1,9 +1,11 @@
 import path from 'path';
+
 import {
-  ServiceMethod,
   LocalFileItemExtra,
   S3FileItemExtra,
+  ServiceMethod,
 } from 'graasp-plugin-file';
+
 import { FileItemExtra } from './types';
 
 export const randomHexOf4 = (): string =>

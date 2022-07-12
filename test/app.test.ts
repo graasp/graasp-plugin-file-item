@@ -2,24 +2,31 @@ import FormData from 'form-data';
 import fs, { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { v4 } from 'uuid';
+
 import {
-  TaskRunner,
-  ItemTaskManager,
+  LocalFileItemExtra,
+  S3FileItemExtra,
+  ServiceMethod,
+} from 'graasp-plugin-file';
+import {
   ItemMembershipTaskManager,
+  ItemTaskManager,
+  TaskRunner,
 } from 'graasp-test';
-import build from './app';
+
 import plugin from '../src/plugin';
+import build from './app';
 import {
+  DEFAULT_ACTOR,
+  DEFAULT_LOGGER,
   FILE_PATHS,
-  ITEM_FILE_TXT,
+  FILE_SERVICES,
   ITEM_FILE_PDF,
+  ITEM_FILE_TXT,
   ITEM_FOLDER,
   S3_ITEM_FILE_TXT,
   buildLocalOptions,
   buildS3Options,
-  DEFAULT_LOGGER,
-  FILE_SERVICES,
-  DEFAULT_ACTOR,
 } from './fixtures';
 import {
   mockCreateCopyFileTask,
@@ -28,11 +35,6 @@ import {
   mockGetOfItemTaskSequence,
   mockGetTaskSequence,
 } from './mocks';
-import {
-  ServiceMethod,
-  S3FileItemExtra,
-  LocalFileItemExtra,
-} from 'graasp-plugin-file';
 
 const itemTaskManager = new ItemTaskManager();
 const itemMembershipTaskManager = new ItemMembershipTaskManager();

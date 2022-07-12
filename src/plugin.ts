@@ -1,20 +1,22 @@
 import { FastifyPluginAsync } from 'fastify';
-import { Item } from 'graasp';
+
+import { Item, PermissionLevel } from '@graasp/sdk';
 import graaspFileUploadLimiter from 'graasp-file-upload-limiter';
+import {
+  FileUploadLimiterDbService,
+  FileUploadLimiterTaskManager,
+} from 'graasp-file-upload-limiter';
 import basePlugin, {
   FileTaskManager,
-  ServiceMethod,
   LocalFileItemExtra,
   S3FileItemExtra,
+  ServiceMethod,
 } from 'graasp-plugin-file';
-import {
-  FileUploadLimiterTaskManager,
-  FileUploadLimiterDbService,
-} from 'graasp-file-upload-limiter';
+
 import { buildFilePathFromPrefix } from '.';
 import { ORIGINAL_FILENAME_TRUNCATE_LIMIT } from './constants';
 import { getFileExtra, getFilePathFromItemExtra } from './helpers';
-import { GraaspPluginFileItemOptions, FileItemExtra } from './types';
+import { FileItemExtra, GraaspPluginFileItemOptions } from './types';
 
 const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   fastify,
@@ -101,7 +103,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
 
       // check member has permission to upload item in parent
       const getTasks = iMTM.createGetOfItemTaskSequence(member, data.parentId);
-      getTasks[1].input = { validatePermission: 'write' };
+      getTasks[1].input = { validatePermission: PermissionLevel.Write };
       return [...tasks, ...getTasks];
     },
 

@@ -1,21 +1,23 @@
 import FormData from 'form-data';
 import fs, { createReadStream } from 'fs';
-import plugin from '../src/publicPlugin';
 import { StatusCodes } from 'http-status-codes';
-import {
-  TaskRunner,
-  ItemTaskManager,
-  ItemMembershipTaskManager,
-} from 'graasp-test';
-import build from './app';
-import { FILE_PATHS, FILE_SERVICES, ITEM_FILE_TXT } from './fixtures';
+
 import { ServiceMethod } from 'graasp-plugin-file';
 import {
   CannotEditPublicItem,
   PublicItemTaskManager,
 } from 'graasp-plugin-public';
-import { buildPublicLocalOptions, buildPublicS3Options } from './fixtures';
+import {
+  ItemMembershipTaskManager,
+  ItemTaskManager,
+  TaskRunner,
+} from 'graasp-test';
 import MockTask from 'graasp-test/src/tasks/task';
+
+import plugin from '../src/publicPlugin';
+import build from './app';
+import { FILE_PATHS, FILE_SERVICES, ITEM_FILE_TXT } from './fixtures';
+import { buildPublicLocalOptions, buildPublicS3Options } from './fixtures';
 
 const itemTaskManager = new ItemTaskManager();
 const itemMembershipTaskManager = new ItemMembershipTaskManager();
