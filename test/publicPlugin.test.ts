@@ -2,7 +2,7 @@ import FormData from 'form-data';
 import fs, { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 
-import { ServiceMethod } from 'graasp-plugin-file';
+import { ItemType } from '@graasp/sdk';
 import {
   CannotEditPublicItem,
   PublicItemTaskManager,
@@ -64,9 +64,9 @@ describe('Options', () => {
 });
 
 const buildFileServiceOptions = (service) => {
-  if (service === ServiceMethod.LOCAL) {
+  if (service === ItemType.LOCAL_FILE) {
     return buildPublicLocalOptions();
-  } else if (service === ServiceMethod.S3) {
+  } else if (service === ItemType.S3_FILE) {
     return buildPublicS3Options();
   }
   throw new Error('Service is not defined');

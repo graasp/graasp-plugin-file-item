@@ -1,23 +1,21 @@
 import {
+  FileItemType,
+  LocalFileConfiguration,
+  S3FileConfiguration,
+} from '@graasp/sdk';
+import {
   DownloadPreHookTasksFunction,
-  GraaspLocalFileItemOptions,
-  GraaspS3FileItemOptions,
-  LocalFileItemExtra,
-  S3FileItemExtra,
-  ServiceMethod,
   UploadPreHookTasksFunction,
 } from 'graasp-plugin-file';
 
-export type FileItemExtra = S3FileItemExtra | LocalFileItemExtra;
-
 export interface GraaspPluginFileItemOptions {
-  serviceMethod: ServiceMethod;
+  fileItemType: FileItemType;
 
   pathPrefix: string;
 
-  serviceOptions: {
-    s3: GraaspS3FileItemOptions;
-    local: GraaspLocalFileItemOptions;
+  fileConfigurations: {
+    s3: S3FileConfiguration;
+    local: LocalFileConfiguration;
   };
 
   // upload limiter

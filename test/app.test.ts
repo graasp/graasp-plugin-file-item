@@ -3,11 +3,7 @@ import fs, { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { v4 } from 'uuid';
 
-import {
-  LocalFileItemExtra,
-  S3FileItemExtra,
-  ServiceMethod,
-} from 'graasp-plugin-file';
+import { ItemType, LocalFileItemExtra, S3FileItemExtra } from '@graasp/sdk';
 import {
   ItemMembershipTaskManager,
   ItemTaskManager,
@@ -80,9 +76,9 @@ const fileStream = createReadStream(filepath);
 jest.spyOn(fs, 'createReadStream').mockImplementation(() => fileStream);
 
 const buildFileServiceOptions = (service) => {
-  if (service === ServiceMethod.LOCAL) {
+  if (service === ItemType.LOCAL_FILE) {
     return buildLocalOptions();
-  } else if (service === ServiceMethod.S3) {
+  } else if (service === ItemType.S3_FILE) {
     return buildS3Options();
   }
   throw new Error('Service is not defined');
@@ -354,7 +350,7 @@ describe('Hooks', () => {
             const fileTaskMock = mockCreateCopyFileTask('newFilePath');
             await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
-            expect((original.extra.file as LocalFileItemExtra).path).toEqual(
+            expect((original.extra?.file as LocalFileItemExtra).path).toEqual(
               'newFilePath',
             );
           }
@@ -371,7 +367,7 @@ describe('Hooks', () => {
             const fileTaskMock = mockCreateCopyFileTask('newFilePath');
             await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
-            expect((original.extra.s3File as S3FileItemExtra).path).toEqual(
+            expect((original.extra?.s3File as S3FileItemExtra).path).toEqual(
               'newFilePath',
             );
           }

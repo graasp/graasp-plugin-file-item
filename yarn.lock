@@ -969,16 +969,17 @@ __metadata:
 
 "@graasp/sdk@github:graasp/graasp-utils#15/testUtils":
   version: 0.1.0
-  resolution: "@graasp/sdk@https://github.com/graasp/graasp-utils.git#commit=7b23774af09372efc95acb1180c9888578d2778c"
+  resolution: "@graasp/sdk@https://github.com/graasp/graasp-utils.git#commit=661117d8b5116b7ebfe39e43f39f3c8eb65b3e7c"
   dependencies:
     "@fastify/secure-session": 5.2.0
+    aws-sdk: 2.1111.0
     fastify: ^3.29.1
     fluent-json-schema: 3.1.0
     js-cookie: 3.0.1
     qs: 6.11.0
     slonik: 28.1.1
     uuid: 8.3.2
-  checksum: 8f262275f6fd49a495694730d0f9fdbb4191e3b2c710b99bc8a8e0dedc7ed68d50eba3a578b1045bbc0edd4543b1434d13db7820f3ebf3504243e24da342c7a6
+  checksum: 667b0eea9bfaf14ffeae3b27a7eebfdc3b566362f5655fdd089551bd40bb797d4496968acea04f19e044f242170afd2d7698a1037bbca42c8f3af2c26e802955
   languageName: node
   linkType: hard
 
@@ -3619,7 +3620,7 @@ __metadata:
 
 "graasp-plugin-file@github:graasp/graasp-plugin-file#29/sdk":
   version: 0.1.0
-  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=354871ee8459898c3baec9cf364351e8c60b5f75"
+  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=70127e79d62ba7e6499ac12d4f68176bf1c9671c"
   dependencies:
     "@fastify/multipart": 6.0.0
     "@graasp/translations": "github:graasp/graasp-translations"
@@ -3628,7 +3629,7 @@ __metadata:
     fs-extra: 10.1.0
     http-status-codes: 2.2.0
     node-fetch: 2.6.7
-  checksum: cbe6024bba1a054c42ca83e09e67de04570f3414c2fbcdf5a5a7c47fe8ed8d0add9a2ec38979f2b93e80bf3f937200ce89fef554901892ffc8e0a7cfd9d343c3
+  checksum: 6ffbfcd95b9dc77a7563383f08350a8d46b9bec053fad2963cb27a75abc9e377f48a6b6092cca328ab1ae1c484da75353ad843cc96f222d1a11e63a654b290a8
   languageName: node
   linkType: hard
 

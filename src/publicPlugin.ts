@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 
-import { FileItemExtra } from 'graasp-plugin-file';
+import { FileItemExtra } from '@graasp/sdk';
 import { CannotEditPublicItem } from 'graasp-plugin-public';
 
 import { GraaspPluginFileItemOptions, getFileExtra } from '.';
@@ -10,7 +10,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   fastify,
   options,
 ) => {
-  const { serviceMethod, pathPrefix, shouldLimit, serviceOptions } = options;
+  const { fileItemType, pathPrefix, shouldLimit, fileConfigurations } = options;
   const {
     public: {
       items: { taskManager: pITM },
@@ -21,8 +21,8 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   fastify.register(fileItemPlugin, {
     shouldLimit,
     pathPrefix,
-    serviceMethod: serviceMethod,
-    serviceOptions,
+    fileItemType: fileItemType,
+    fileConfigurations,
     uploadPreHookTasks: async (payload) => {
       throw new CannotEditPublicItem(payload);
     },
@@ -30,7 +30,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       const task = pITM.createGetPublicItemTask(graaspActor, { itemId: id });
       task.getResult = () => {
         const extra = getFileExtra(
-          serviceMethod,
+          fileItemType,
           task.result.extra as FileItemExtra,
         );
         return {
