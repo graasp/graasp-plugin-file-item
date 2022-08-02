@@ -983,22 +983,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graasp/sdk@github:graasp/graasp-utils#15/testUtils":
-  version: 0.1.0
-  resolution: "@graasp/sdk@https://github.com/graasp/graasp-utils.git#commit=661117d8b5116b7ebfe39e43f39f3c8eb65b3e7c"
-  dependencies:
-    "@fastify/secure-session": 5.2.0
-    aws-sdk: 2.1111.0
-    fastify: ^3.29.1
-    fluent-json-schema: 3.1.0
-    js-cookie: 3.0.1
-    qs: 6.11.0
-    slonik: 28.1.1
-    uuid: 8.3.2
-  checksum: 667b0eea9bfaf14ffeae3b27a7eebfdc3b566362f5655fdd089551bd40bb797d4496968acea04f19e044f242170afd2d7698a1037bbca42c8f3af2c26e802955
-  languageName: node
-  linkType: hard
-
 "@graasp/translations@github:graasp/graasp-translations":
   version: 0.1.0
   resolution: "@graasp/translations@https://github.com/graasp/graasp-translations.git#commit=315ee917719c683e24149811eab2d562c98b40ce"
@@ -3621,8 +3605,8 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     fastify: ^3.29.1
     graasp-file-upload-limiter: "github:graasp/graasp-file-upload-limiter"
-    graasp-plugin-file: "github:graasp/graasp-plugin-file#29/sdk"
-    graasp-plugin-public: "github:graasp/graasp-plugin-public#44/sdk"
+    graasp-plugin-file: "github:graasp/graasp-plugin-file"
+    graasp-plugin-public: "github:graasp/graasp-plugin-public"
     graasp-test: "github:graasp/graasp-test"
     husky: 7.0.4
     jest: 27.5.1
@@ -3634,9 +3618,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"graasp-plugin-file@github:graasp/graasp-plugin-file#29/sdk":
+"graasp-plugin-file@github:graasp/graasp-plugin-file":
   version: 0.1.0
-  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=70127e79d62ba7e6499ac12d4f68176bf1c9671c"
+  resolution: "graasp-plugin-file@https://github.com/graasp/graasp-plugin-file.git#commit=0381d1b3e271dd185d1708584a9e5e4683446920"
   dependencies:
     "@fastify/multipart": 6.0.0
     "@graasp/translations": "github:graasp/graasp-translations"
@@ -3645,19 +3629,18 @@ __metadata:
     fs-extra: 10.1.0
     http-status-codes: 2.2.0
     node-fetch: 2.6.7
-  checksum: 6ffbfcd95b9dc77a7563383f08350a8d46b9bec053fad2963cb27a75abc9e377f48a6b6092cca328ab1ae1c484da75353ad843cc96f222d1a11e63a654b290a8
+  checksum: 64922d616a9f8aa6d67727ef9c12bd6d804d5ac86972c575031535194068895a279b72e6db8b19c4e597a3207d602c8437cd81a2eed016ec812aff38f9c53778
   languageName: node
   linkType: hard
 
-"graasp-plugin-public@github:graasp/graasp-plugin-public#44/sdk":
+"graasp-plugin-public@github:graasp/graasp-plugin-public":
   version: 0.1.0
-  resolution: "graasp-plugin-public@https://github.com/graasp/graasp-plugin-public.git#commit=758d9a76faa2748b40623317a16d7a281cad1382"
+  resolution: "graasp-plugin-public@https://github.com/graasp/graasp-plugin-public.git#commit=8e2a57354bd1f143d3b525023b3746ebb7c3f6db"
   dependencies:
-    "@graasp/sdk": "github:graasp/graasp-utils#15/testUtils"
     graasp-item-tags: "github:graasp/graasp-item-tags"
     http-status-codes: 2.2.0
     qs: 6.11.0
-  checksum: 81bebbb1d33e5c4a6220c9ed8adaa0a372419d08d2719437884f868bb28ca8e8a7f0ed5bb8e63df03ec847db173a490c2c42c0b527a328050c2f49d0b3ba01b8
+  checksum: 9b40df7b6ff4b15431c9ef1af8bb1e183b9145a7bb32e23e82b71ef5bd1b0c26455f4c21a129e2777f04556d244a66290399d152bd0037ee64750175e452b54b
   languageName: node
   linkType: hard
 

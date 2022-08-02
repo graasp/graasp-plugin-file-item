@@ -23,8 +23,8 @@
   "license": "MIT",
   "dependencies": {
     "graasp-file-upload-limiter": "github:graasp/graasp-file-upload-limiter",
-    "graasp-plugin-file": "github:graasp/graasp-plugin-file#29/sdk",
-    "graasp-plugin-public": "github:graasp/graasp-plugin-public#44/sdk"
+    "graasp-plugin-file": "github:graasp/graasp-plugin-file",
+    "graasp-plugin-public": "github:graasp/graasp-plugin-public"
   },
   "devDependencies": {
     "@commitlint/cli": "16.2.4",
