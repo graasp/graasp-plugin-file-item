@@ -1,21 +1,23 @@
 import FormData from 'form-data';
 import fs, { createReadStream } from 'fs';
-import plugin from '../src/publicPlugin';
 import { StatusCodes } from 'http-status-codes';
-import {
-  TaskRunner,
-  ItemTaskManager,
-  ItemMembershipTaskManager,
-} from 'graasp-test';
-import build from './app';
-import { FILE_PATHS, FILE_SERVICES, ITEM_FILE_TXT } from './fixtures';
-import { ServiceMethod } from 'graasp-plugin-file';
+
+import { ItemType } from '@graasp/sdk';
 import {
   CannotEditPublicItem,
   PublicItemTaskManager,
 } from 'graasp-plugin-public';
+import {
+  ItemMembershipTaskManager,
+  ItemTaskManager,
+  TaskRunner,
+  Task as MockTask
+} from 'graasp-test';
+
+import plugin from '../src/publicPlugin';
+import build from './app';
+import { FILE_PATHS, FILE_SERVICES, ITEM_FILE_TXT } from './fixtures';
 import { buildPublicLocalOptions, buildPublicS3Options } from './fixtures';
-import MockTask from 'graasp-test/src/tasks/task';
 
 const itemTaskManager = new ItemTaskManager();
 const itemMembershipTaskManager = new ItemMembershipTaskManager();
@@ -62,9 +64,9 @@ describe('Options', () => {
 });
 
 const buildFileServiceOptions = (service) => {
-  if (service === ServiceMethod.LOCAL) {
+  if (service === ItemType.LOCAL_FILE) {
     return buildPublicLocalOptions();
-  } else if (service === ServiceMethod.S3) {
+  } else if (service === ItemType.S3_FILE) {
     return buildPublicS3Options();
   }
   throw new Error('Service is not defined');

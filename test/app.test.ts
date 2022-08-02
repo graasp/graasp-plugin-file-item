@@ -2,24 +2,27 @@ import FormData from 'form-data';
 import fs, { createReadStream } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { v4 } from 'uuid';
+
+import { ItemType, LocalFileItemExtra, S3FileItemExtra } from '@graasp/sdk';
 import {
-  TaskRunner,
-  ItemTaskManager,
   ItemMembershipTaskManager,
+  ItemTaskManager,
+  TaskRunner,
 } from 'graasp-test';
-import build from './app';
+
 import plugin from '../src/plugin';
+import build from './app';
 import {
+  DEFAULT_ACTOR,
+  DEFAULT_LOGGER,
   FILE_PATHS,
-  ITEM_FILE_TXT,
+  FILE_SERVICES,
   ITEM_FILE_PDF,
+  ITEM_FILE_TXT,
   ITEM_FOLDER,
   S3_ITEM_FILE_TXT,
   buildLocalOptions,
   buildS3Options,
-  DEFAULT_LOGGER,
-  FILE_SERVICES,
-  DEFAULT_ACTOR,
 } from './fixtures';
 import {
   mockCreateCopyFileTask,
@@ -28,11 +31,6 @@ import {
   mockGetOfItemTaskSequence,
   mockGetTaskSequence,
 } from './mocks';
-import {
-  ServiceMethod,
-  S3FileItemExtra,
-  LocalFileItemExtra,
-} from 'graasp-plugin-file';
 
 const itemTaskManager = new ItemTaskManager();
 const itemMembershipTaskManager = new ItemMembershipTaskManager();
@@ -78,9 +76,9 @@ const fileStream = createReadStream(filepath);
 jest.spyOn(fs, 'createReadStream').mockImplementation(() => fileStream);
 
 const buildFileServiceOptions = (service) => {
-  if (service === ServiceMethod.LOCAL) {
+  if (service === ItemType.LOCAL_FILE) {
     return buildLocalOptions();
-  } else if (service === ServiceMethod.S3) {
+  } else if (service === ItemType.S3_FILE) {
     return buildS3Options();
   }
   throw new Error('Service is not defined');
@@ -352,7 +350,7 @@ describe('Hooks', () => {
             const fileTaskMock = mockCreateCopyFileTask('newFilePath');
             await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
-            expect((original.extra.file as LocalFileItemExtra).path).toEqual(
+            expect((original.extra?.file as LocalFileItemExtra).path).toEqual(
               'newFilePath',
             );
           }
@@ -369,7 +367,7 @@ describe('Hooks', () => {
             const fileTaskMock = mockCreateCopyFileTask('newFilePath');
             await fn(original, actor, { log: DEFAULT_LOGGER }, { original });
             expect(fileTaskMock).toHaveBeenCalledTimes(1);
-            expect((original.extra.s3File as S3FileItemExtra).path).toEqual(
+            expect((original.extra?.s3File as S3FileItemExtra).path).toEqual(
               'newFilePath',
             );
           }

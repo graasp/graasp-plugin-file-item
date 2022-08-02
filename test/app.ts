@@ -1,11 +1,13 @@
+import { Server } from 'http';
+
 import fastify, { FastifyPluginAsync } from 'fastify';
+
 import { PublicItemTaskManager } from 'graasp-plugin-public';
 import {
   ItemMembershipTaskManager,
   ItemTaskManager,
   TaskRunner,
 } from 'graasp-test';
-import { Server } from 'http';
 
 const schemas = {
   $id: 'http://graasp.org/',

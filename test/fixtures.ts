@@ -1,7 +1,9 @@
-import { FastifyLoggerInstance } from 'fastify';
-import { Item, Member, MemberType } from 'graasp';
-import { ServiceMethod } from 'graasp-plugin-file';
 import { v4 } from 'uuid';
+
+import { FastifyLoggerInstance } from 'fastify';
+
+import { Item, ItemType, Member, MemberType } from '@graasp/sdk';
+
 import { GraaspPluginFileItemOptions } from '../src';
 
 export const ROOT_PATH = './test/files';
@@ -79,9 +81,9 @@ const DEFAULT_LOCAL_OPTIONS = {
 export const buildPublicLocalOptions = (
   pathPrefix = 'prefix/',
 ): Partial<GraaspPluginFileItemOptions> => ({
-  serviceMethod: ServiceMethod.LOCAL,
+  fileItemType: ItemType.LOCAL_FILE,
   pathPrefix,
-  serviceOptions: {
+  fileConfigurations: {
     local: DEFAULT_LOCAL_OPTIONS,
     s3: DEFAULT_S3_OPTIONS,
   },
@@ -90,9 +92,9 @@ export const buildPublicS3Options = (
   pathPrefix = 'prefix/',
   s3 = DEFAULT_S3_OPTIONS,
 ): Partial<GraaspPluginFileItemOptions> => ({
-  serviceMethod: ServiceMethod.S3,
+  fileItemType: ItemType.S3_FILE,
   pathPrefix,
-  serviceOptions: {
+  fileConfigurations: {
     s3,
     local: DEFAULT_LOCAL_OPTIONS,
   },
@@ -101,9 +103,9 @@ export const buildPublicS3Options = (
 export const buildLocalOptions = (
   pathPrefix = 'prefix/',
 ): Partial<GraaspPluginFileItemOptions> => ({
-  serviceMethod: ServiceMethod.LOCAL,
+  fileItemType: ItemType.LOCAL_FILE,
   pathPrefix,
-  serviceOptions: {
+  fileConfigurations: {
     local: DEFAULT_LOCAL_OPTIONS,
     s3: DEFAULT_S3_OPTIONS,
   },
@@ -112,9 +114,9 @@ export const buildS3Options = (
   pathPrefix = 'prefix/',
   s3 = DEFAULT_S3_OPTIONS,
 ): Partial<GraaspPluginFileItemOptions> => ({
-  serviceMethod: ServiceMethod.S3,
+  fileItemType: ItemType.S3_FILE,
   pathPrefix,
-  serviceOptions: {
+  fileConfigurations: {
     s3,
     local: DEFAULT_LOCAL_OPTIONS,
   },
@@ -129,7 +131,7 @@ export const DEFAULT_LOGGER: FastifyLoggerInstance = {
   child: jest.fn(),
 };
 
-export const FILE_SERVICES = [ServiceMethod.LOCAL, ServiceMethod.S3];
+export const FILE_SERVICES = [ItemType.LOCAL_FILE, ItemType.S3_FILE];
 
 export const DEFAULT_ACTOR = {
   id: v4(),

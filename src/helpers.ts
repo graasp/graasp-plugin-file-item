@@ -1,16 +1,17 @@
 import path from 'path';
+
 import {
-  ServiceMethod,
+  FileItemExtra,
+  ItemType,
   LocalFileItemExtra,
   S3FileItemExtra,
-} from 'graasp-plugin-file';
-import { FileItemExtra } from './types';
+} from '@graasp/sdk';
 
 export const randomHexOf4 = (): string =>
   ((Math.random() * (1 << 16)) | 0).toString(16).padStart(4, '0');
 
 export const getFileExtra = (
-  serviceMethod: ServiceMethod,
+  serviceMethod: ItemType,
   extra: FileItemExtra,
 ): {
   name: string;
@@ -18,16 +19,16 @@ export const getFileExtra = (
   mimetype: string;
 } => {
   switch (serviceMethod) {
-    case ServiceMethod.S3:
+    case ItemType.S3_FILE:
       return (extra as S3FileItemExtra).s3File;
-    case ServiceMethod.LOCAL:
+    case ItemType.LOCAL_FILE:
     default:
       return (extra as LocalFileItemExtra).file;
   }
 };
 
 export const getFilePathFromItemExtra = (
-  serviceMethod: ServiceMethod,
+  serviceMethod: ItemType,
   extra: FileItemExtra,
 ): string => {
   return getFileExtra(serviceMethod, extra).path;
