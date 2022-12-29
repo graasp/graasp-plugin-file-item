@@ -172,7 +172,7 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   const deleteTaskName = itemTaskManager.getDeleteTaskName();
   runner.setTaskPostHookHandler<Item>(
     deleteTaskName,
-    async ({ id, type, extra }, _actor, { log }) => {
+    async ({ id, type, extra }, _actor, { log, handler }) => {
       try {
         // delete file only if type is the current file type
         if (!id || type !== fileItemType) return;
@@ -181,8 +181,11 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
           extra as FileItemExtra,
         );
 
-        const task = fileTaskManager.createDeleteFileTask({ id }, { filepath });
-        await runner.runSingle(task);
+        const deleteFileTask = fileTaskManager.createDeleteFileTask({ id }, { filepath });
+        // DON'T use task runner for delete file task: this would generate a new transaction
+        // which is useless since the file delete task should not touch the DB at all
+        // TODO: replace when the file plugin has been refactored into a proper file service
+        await deleteFileTask.run(handler, log);
       } catch (err) {
         // we catch the error, it ensures the item is deleted even if the file is not
         // this is especially useful for the files uploaded before the migration to the new plugin
@@ -195,13 +198,11 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
   const copyItemTaskName = itemTaskManager.getCopyTaskName();
   runner.setTaskPreHookHandler<Item>(
     copyItemTaskName,
-    async (item, actor, { log }, { original }) => {
+    async (item, actor, { log, handler }, { original }) => {
       const { id, type, extra } = item; // full copy with new `id`
 
       // copy file only if type is the current file type
       if (!id || type !== fileItemType) return;
-
-      log.debug('copy item file');
 
       // filenames are not used
       const originalPath = getFileExtra(
@@ -210,13 +211,17 @@ const plugin: FastifyPluginAsync<GraaspPluginFileItemOptions> = async (
       ).path;
       const newFilePath = buildFilePath(item.id, 'filename');
 
-      const task = fileTaskManager.createCopyFileTask(actor, {
+      const copyFileTask = fileTaskManager.createCopyFileTask(actor, {
         newId: item.id,
         originalPath,
         newFilePath,
         mimetype: getFileExtra(fileItemType, extra as FileItemExtra).mimetype,
       });
-      const filepath = (await runner.runSingle(task)) as string;
+      // DON'T use task runner for copy file task: this would generate a new transaction
+      // which is useless since the file copy task should not touch the DB at all
+      // TODO: replace when the file plugin has been refactored into a proper file service
+      await copyFileTask.run(handler, log);
+      const filepath = copyFileTask.result as string;
 
       // update item copy's 'extra'
       if (fileItemType === ItemType.S3_FILE) {
